@@ -1,0 +1,117 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(135deg, #2c2c2c 0%, #1a1a1a 100%);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.login-container {
+    background: rgba(45, 45, 45, 0.95);
+    border-radius: 12px;
+    padding: 40px 35px;
+    width: 100%;
+    max-width: 380px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative;
+}
+
+.login-container::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%; 
+    height: 12px;
+    background: #c82333; 
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+}
+
+.logo-container {
+    text-align: center;
+    margin-bottom: 35px;
+}
+
+.subtitle {
+    color: #cccccc;
+    font-size: 14px;
+    margin-top: 8px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-input {
+    width: 100%;
+    padding: 15px 18px;
+    background: rgba(80, 80, 80, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    color: white;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    outline: none;
+}
+
+.form-input::placeholder {
+    color: #999;
+    opacity: 1;
+}
+
+.form-input:focus {
+    border-color: #c41e3a;
+    background: rgba(90, 90, 90, 0.9);
+    box-shadow: 0 0 0 2px rgba(196, 30, 58, 0.2);
+}
+
+.login-button {
+    width: 100%;
+    padding: 15px;
+    background: linear-gradient(135deg, #c41e3a 0%, #a01729 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-bottom: 20px;
+}
+
+.login-button:hover {
+    background: linear-gradient(135deg, #d42c47 0%, #b01d2f 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(196, 30, 58, 0.3);
+}
+
+.login-button:active {
+    transform: translateY(0);
+}
+
+.forgot-password {
+    text-align: center;
+}
+
+.forgot-password a {
+    color: #cccccc;
+    text-decoration: none;
+    font-size: 14px;
+    transition: color 0.3s ease;
+}
+
+.forgot-password a:hover {
+    color: #c41e3a;
+}

@@ -1,0 +1,105 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+    min-height: 100vh;
+}
+
+/* Header principal */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 30px;
+    background: #1a1a1a;
+    border-bottom: 2px solid #c41e3a;
+}
+
+/* Logo */
+.logo img {
+    height: 50px;
+    width: auto;
+    display: block;
+}
+
+/* Info do usuário */
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #fff;
+    font-size: 14px;
+}
+
+/* Avatar redondo */
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    background: #c41e3a;
+    color: #fff;
+    font-weight: bold;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Navegação */
+.navigation {
+    background: #333;
+    display: flex;
+}
+
+.nav-item {
+    padding: 1rem 2rem;
+    color: #ccc;
+    text-decoration: none;
+    border-bottom: 3px solid transparent;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+/* Navegação */
+.navigation {
+    background: #333;
+    display: flex;
+    align-items: center;
+    padding: 0 30px; /* ajuste de espaçamento lateral */
+}
+
+/* Cada item de navegação */
+.nav-item {
+    color: #ccc;
+    text-decoration: none;
+    border-bottom: 3px solid transparent;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.nav-item:hover {
+    background: #444;
+    color: #fff;
+}
+
+.nav-item.active {
+    background: #c41e3a;
+    color: #fff;
+    border-bottom-color: #a01729;
+}
+
+.nav-item:first-child {
+    margin-right: auto; 
+}
+
+.nav-item:nth-child(2) {
+    margin: 0 auto; 
+}
+
+.nav-item:last-child {
+    margin-left: auto;
+}
