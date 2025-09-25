@@ -16,10 +16,10 @@ app.use(session({
 }))
 
 const authRouter = require('./routers/auth')
-const homeGerenteRouter = require('./routers/homeGerente')
+const homeRouter = require('./routers/home')
 
 app.use('/', authRouter)
-app.use('/homeGerente', homeGerenteRouter)
+app.use('/home', homeRouter)
 
 
 app.listen(4040, ()=>{

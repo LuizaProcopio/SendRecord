@@ -1,0 +1,8 @@
+<nav class="navigation">
+    <a href="/home" class="nav-item active">Home</a>
+    <a href="/vendas" class="nav-item">Vendas</a>
+
+    <% if (tipo_acesso === 'gerente') { %>
+        <a href="/config" class="nav-item">Configuração</a>
+    <% } %>
+</nav>
