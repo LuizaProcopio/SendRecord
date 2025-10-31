@@ -30,3 +30,4 @@ npm i electron-builder --save
 
 # Gerenciamento de variáveis de ambiente
 npm install dotenv
+npm install multer

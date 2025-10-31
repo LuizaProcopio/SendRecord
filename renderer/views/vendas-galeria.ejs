@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/style.css">
+    <title>Galeria - Pedido <%= pedido.order_id %></title>
+</head>
+<body>
+    
+    <header class="header">
+        <div class="logo">
+            <img src="/img/Marca.png" alt="Logo da Loja" width="300">
+        </div>
+        
+        <%- include('partials/header', { 
+            nome: nome, 
+            tipo_acesso: tipo_acesso,
+            currentPage: currentPage
+        }) %>
+    </header>
+
+    <div class="galeria-container">
+        <a href="/vendas/detalhes/<%= pedido.id %>" class="back-button">
+            ← Voltar para Detalhes
+        </a>
+
+        <div class="galeria-header">
+            <div class="galeria-title">
+                📷 Galeria de Imagens - Pedido #<%= pedido.order_id %>
+            </div>
+            <div class="galeria-info">
+                Cliente: <%= pedido.customer_name %> | 
+                Status: <%= pedido.status.replace('_', ' ') %>
+            </div>
+        </div>
+
+        <div class="contador-imagens">
+            <strong><%= provas.length %></strong> <%= provas.length === 1 ? 'imagem encontrada' : 'imagens encontradas' %>
+        </div>
+
+        <% if (provas.length === 0) { %>
+        <div class="empty-state">
+            <div class="empty-state-icon">📷</div>
+            <div class="empty-state-text">
+                Nenhuma imagem de prova cadastrada para este pedido
+            </div>
+        </div>
+        <% } else { %>
+        <div class="galeria-grid">
+            <% provas.forEach(function(prova, index) { %>
+            <div class="imagem-card">
+                <div class="imagem-wrapper" onclick="abrirModal('<%= prova.image_path %>')">
+                    <img src="<%= prova.image_path %>" alt="Prova <%= index + 1 %>" loading="lazy">
+                </div>
+                <div class="imagem-info">
+                    <div class="imagem-meta">
+                        <div class="imagem-data">
+                            📅 <%= new Date(prova.created_at).toLocaleDateString('pt-BR') %> às 
+                            <%= new Date(prova.created_at).toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}) %>
+                        </div>
+                        <div class="imagem-usuario">
+                            👤 <%= prova.usuario_nome || 'Desconhecido' %>
+                        </div>
+                    </div>
+                    
+                    <% if (prova.observacoes) { %>
+                    <div class="imagem-obs">
+                        💬 <%= prova.observacoes %>
+                    </div>
+                    <% } %>
+
+                    <div class="btn-acoes">
+                        <button class="btn-ver-completo" onclick="abrirModal('<%= prova.image_path %>')">
+                            🔍 Ver Completo
+                        </button>
+                        <a href="<%= prova.image_path %>" download class="btn-download">
+                            ⬇️ Download
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <% }); %>
+        </div>
+        <% } %>
+    </div>
+
+    <!-- Modal para visualizar imagem -->
+    <div id="imageModal" class="modal" onclick="fecharModal()">
+        <span class="modal-close">&times;</span>
+        <div class="modal-content">
+            <img id="modalImage" src="" alt="Imagem ampliada">
+        </div>
+    </div>
+
+    <script>
+        function abrirModal(imagePath) {
+            const modal = document.getElementById('imageModal');
+            const modalImg = document.getElementById('modalImage');
+            modal.style.display = 'block';
+            modalImg.src = imagePath;
+        }
+
+        function fecharModal() {
+            document.getElementById('imageModal').style.display = 'none';
+        }
+
+        // Fechar modal com ESC
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                fecharModal();
+            }
+        });
+    </script>
+</body>
+</html>
