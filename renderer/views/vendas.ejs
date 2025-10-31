@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/style.css"> 
+    <title>Vendas - MVERNON</title>
+</head>
+<body>
+    
+    <header class="header">
+        <div class="logo">
+            <img src="../img/Marca.png" alt="Logo da Loja" width="300">
+        </div>
+        
+        <%- include('partials/header', { 
+            nome: nome, 
+            tipo_acesso: tipo_acesso,
+            currentPage: currentPage
+        }) %>
+    </header>
+    
+    <div class="container">
+        <!-- Filtros e busca -->
+        <div class="filters-section">
+            <form method="GET" action="/vendas" class="search-box">
+                <input type="text" name="busca" class="search-input" 
+                       placeholder="Pesquisar por Order ID, Cliente, CPF/CNPJ ou NF" 
+                       value="<%= typeof busca !== 'undefined' ? busca : '' %>">
+            
+                <button type="submit" class="btn-search">🔍 Pesquisar</button>
+            </form>
+        </div>
+
+        <!-- Tabela de vendas/pedidos -->
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <% if (typeof pedidos !== 'undefined') { %>
+                            <!-- Cabeçalho para pedidos -->
+                            <th>Order ID</th>
+                            <th>Data</th>
+                            <th>Cliente</th>
+                            <th>Origem</th>
+                            <th>Itens</th>
+                            <th>Valor</th>
+                            <th>Status</th>
+                            <th>Prova</th>
+                            <th>Ações</th>
+                        <% } else { %>
+                            <!-- Cabeçalho para vendas antigas -->
+                            <th>Nº</th>
+                            <th>Data</th>
+                            <th>Cliente</th>
+                            <th>NF</th>
+                            <th>Situação</th>
+                            <th>Ações</th>
+                        <% } %>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% 
+                    // Determinar qual array usar (pedidos ou vendas)
+                    const dados = typeof pedidos !== 'undefined' ? pedidos : (typeof vendas !== 'undefined' ? vendas : []);
+                    %>
+                    
+                    <% if (dados.length === 0) { %>
+                        <tr>
+                            <td colspan="<%= typeof pedidos !== 'undefined' ? '9' : '6' %>" class="empty-state">
+                                Nenhum <%= typeof pedidos !== 'undefined' ? 'pedido' : 'venda' %> encontrado
+                            </td>
+                        </tr>
+                    <% } else { %>
+                        <% dados.forEach(function(item) { %>
+                        <tr>
+                            <% if (typeof pedidos !== 'undefined') { %>
+                                <!-- Linha para pedidos -->
+                                <td>
+                                    <strong><%= item.order_id %></strong>
+                                </td>
+                                <td>
+                                    <%= new Date(item.created_at).toLocaleDateString('pt-BR') %><br>
+                                    <span style="font-size: 11px; color: #666;">
+                                        <%= new Date(item.created_at).toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}) %>
+                                    </span>
+                                </td>
+                                <td>
+                                    <%= item.customer_name %><br>
+                                    <span class="item-count"><%= item.cpf_cnpj || 'Sem CPF/CNPJ' %></span>
+                                </td>
+                                <td>
+                                    <span class="source-badge source-<%= item.source %>">
+                                        <%= item.source.replace('_', ' ') %>
+                                    </span>
+                                </td>
+                                <td>
+                                    <%= item.total_itens || 0 %> item(ns)<br>
+                                    <span class="item-count">Qtd: <%= item.quantidade_total || 0 %></span>
+                                </td>
+                                <td>
+                                    R$ <%= parseFloat(item.valor_total || 0).toFixed(2).replace('.', ',') %>
+                                </td>
+                                <td>
+                                    <span class="status-badge status-<%= item.status %>">
+                                        <%= item.status.replace('_', ' ') %>
+                                    </span>
+                                </td>
+                                <td style="text-align: center;">
+                                    <% if (item.imagem_prova) { %>
+                                        <span class="has-image-icon">📷</span>
+                                    <% } else { %>
+                                        <span style="color: #ccc;">—</span>
+                                    <% } %>
+                                </td>
+                            <% } else { %>
+                                <!-- Linha para vendas antigas -->
+                                <td><%= item.order_id || item.numero_pedido %></td>
+                                <td><%= new Date(item.data_venda || item.created_at).toLocaleDateString('pt-BR') %></td>
+                                <td><%= item.nome_completo || item.customer_name %></td>
+                                <td><%= item.nf || '—' %></td>
+                                <td>
+                                    <span class="status-badge status-<%= (item.situacao || item.status).toLowerCase() %>">
+                                        <%= (item.situacao || item.status).charAt(0).toUpperCase() + (item.situacao || item.status).slice(1) %>
+                                    </span>
+                                </td>
+                            <% } %>
+                            <td>
+                                <a href="/vendas/detalhes/<%= item.id %>" class="btn-ver">Ver</a>
+                            </td>
+                        </tr>
+                        <% }); %>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

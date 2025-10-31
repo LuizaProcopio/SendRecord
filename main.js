@@ -3,7 +3,7 @@ const {app, BrowserWindow} = require('electron')
 function createWindow(){
     const win = new BrowserWindow({
         width: 1300,
-        heigth: 1100
+        height: 1100
     })
     win.loadURL('http://localhost:4040')
 }

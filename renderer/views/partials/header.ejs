@@ -1,8 +1,27 @@
-<nav class="navigation">
-    <a href="/home" class="nav-item active">Home</a>
-    <a href="/vendas" class="nav-item">Vendas</a>
+<div class="header-content-container">
+    
+    <div class="user-info-top">
+        
+        <% if (nome) { %>
+            <div class="user-details">
+                <span class="user-name"><%= nome %></span>
+                <span class="user-role"><%= tipo_acesso.charAt(0).toUpperCase() + tipo_acesso.slice(1) %></span>
+            </div>
+        <% } %>
+        
+        <div class="user-avatar">
+            <span><%= nome.charAt(0).toUpperCase() %></span> 
+        </div>
 
-    <% if (tipo_acesso === 'gerente') { %>
-        <a href="/config" class="nav-item">Configuração</a>
+        <a href="/logout" class="btn-logout">SAIR</a>
+    </div>
+    
+<nav class="navigation">
+    <a href="/home" class="nav-item <%= currentPage === 'home' ? 'active' : '' %>">Home</a>
+    <a href="/vendas" class="nav-item <%= currentPage === 'vendas' ? 'active' : '' %>">Vendas</a>
+    <% if (tipo_acesso && tipo_acesso === 'gerente') { %>
+        <a href="/config" class="nav-item <%= currentPage === 'config' ? 'active' : '' %>">Configuração</a>
     <% } %>
 </nav>
+
+</div>
