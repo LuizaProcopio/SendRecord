@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/style.css">
+    <title>Detalhes do Pedido - MVERNON</title>
+</head>
+<body>
+    
+    <header class="header">
+        <div class="logo">
+            <img src="../../img/Marca.png" alt="Logo da Loja" width="300">
+        </div>
+        
+        <%- include('partials/header', { 
+            nome: nome, 
+            tipo_acesso: tipo_acesso,
+            currentPage: currentPage
+        }) %>
+    </header>
+
+    <div class="details-container">
+        <a href="/vendas" class="back-button">
+            ← Voltar para Vendas
+        </a>
+
+        <% if (success) { %>
+        <div class="success-message">
+            ✓ <%= success === '1' ? 'Imagem enviada com sucesso!' : success === 'status_atualizado' ? 'Status atualizado!' : 'Operação realizada com sucesso!' %>
+        </div>
+        <% } %>
+
+        <% if (typeof erro !== 'undefined' && erro) { %>
+        <div class="error-message">
+            ✗ <%= erro === 'nenhum_arquivo' ? 'Nenhum arquivo selecionado' : erro === 'erro_upload' ? 'Erro ao enviar imagem' : 'Erro na operação' %>
+        </div>
+        <% } %>
+
+        <div class="content-grid">
+            <!-- Seção de Upload de Imagem -->
+            <div class="image-section">
+                <div class="image-preview" id="imagePreview">
+                    <% if (typeof prova !== 'undefined' && prova && prova.image_path) { %>
+                        <img src="<%= prova.image_path %>" alt="Prova de embalagem" id="previewImg">
+                    <% } else { %>
+                        <div class="image-preview-empty">
+                            📷<br>Sem imagem<br>de prova
+                        </div>
+                    <% } %>
+                </div>
+                <form method="POST" action="/vendas/upload-imagem/<%= pedido.id %>" enctype="multipart/form-data" id="uploadForm">
+                    <label for="file-upload" class="upload-label">
+                        📁 Selecionar Imagem
+                    </label>
+                    <input id="file-upload" type="file" name="imagem" accept="image/*">
+                    <textarea name="observacoes" class="textarea-obs" placeholder="Observações (opcional)" rows="3"></textarea>
+                    <div class="selected-file" id="selectedFile"></div>
+                    <button type="submit" class="btn-upload" id="btnUpload" disabled>📤 Enviar Prova</button>
+                </form>
+            </div>
+
+            <!-- Seção de Detalhes -->
+            <div class="details-section">
+                <!-- Informações do Pedido -->
+                <div class="section-title">
+                    Pedido #<%= pedido.order_id %>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <span class="status-badge status-<%= pedido.status %>">
+                            <%= pedido.status.replace('_', ' ') %>
+                        </span>
+                        <a href="/vendas/galeria/<%= pedido.id %>" class="btn-visualizar">
+                            🖼️ Visualizar Imagens
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="info-label">Origem:</span>
+                        <span class="info-value"><%= pedido.source.replace('_', ' ') %></span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Data de Criação:</span>
+                        <span class="info-value"><%= new Date(pedido.created_at).toLocaleString('pt-BR') %></span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Valor Total:</span>
+                        <span class="info-value">R$ <%= parseFloat(pedido.valor_total).toFixed(2).replace('.', ',') %></span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Peso Esperado:</span>
+                        <span class="info-value"><%= pedido.peso_total_esperado ? pedido.peso_total_esperado + 'g' : 'Não calculado' %></span>
+                    </div>
+                </div>
+
+                <!-- Dados do Cliente -->
+                <h2 class="section-title">Dados do Cliente</h2>
+                
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="info-label">Nome:</span>
+                        <span class="info-value"><%= pedido.cliente_nome %></span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">CPF/CNPJ:</span>
+                        <span class="info-value"><%= pedido.cpf_cnpj || 'Não informado' %></span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Telefone:</span>
+                        <span class="info-value"><%= pedido.telefone || 'Não informado' %></span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Email:</span>
+                        <span class="info-value"><%= pedido.email || 'Não informado' %></span>
+                    </div>
+                </div>
+
+                <!-- Endereço de Entrega -->
+                <% if (pedido.logradouro) { %>
+                <h2 class="section-title">Endereço de Entrega</h2>
+                
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="info-label">CEP:</span>
+                        <span class="info-value"><%= pedido.cep %></span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Logradouro:</span>
+                        <span class="info-value"><%= pedido.logradouro %>, <%= pedido.numero %></span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Bairro:</span>
+                        <span class="info-value"><%= pedido.bairro %></span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Cidade/Estado:</span>
+                        <span class="info-value"><%= pedido.cidade %> - <%= pedido.estado %></span>
+                    </div>
+                    <% if (pedido.complemento) { %>
+                    <div class="info-item">
+                        <span class="info-label">Complemento:</span>
+                        <span class="info-value"><%= pedido.complemento %></span>
+                    </div>
+                    <% } %>
+                </div>
+                <% } %>
+
+                <!-- Lista de Produtos -->
+                <h2 class="section-title">Produtos do Pedido</h2>
+                
+                <% if (typeof itens !== 'undefined' && itens.length > 0) { %>
+                <table class="products-table">
+                    <thead>
+                        <tr>
+                            <th>Produto</th>
+                            <th>SKU</th>
+                            <th>Variação</th>
+                            <th>Qtd</th>
+                            <th>Verificado</th>
+                            <th>Valor Un.</th>
+                            <th>Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% itens.forEach(function(item) { %>
+                        <tr>
+                            <td><%= item.product_name %></td>
+                            <td><%= item.sku %></td>
+                            <td>
+                                <% if (item.cor || item.tamanho) { %>
+                                    <%= item.cor ? 'Cor: ' + item.cor : '' %>
+                                    <%= item.cor && item.tamanho ? ' | ' : '' %>
+                                    <%= item.tamanho ? 'Tam: ' + item.tamanho : '' %>
+                                <% } else { %>
+                                    —
+                                <% } %>
+                            </td>
+                            <td>
+                                <%= item.quantity_scanned %>/<%= item.quantity_required %>
+                            </td>
+                            <td>
+                                <% if (item.verified) { %>
+                                    <span class="verified-badge">✓ Sim</span>
+                                <% } else { %>
+                                    <span class="not-verified-badge">✗ Não</span>
+                                <% } %>
+                            </td>
+                            <td>R$ <%= parseFloat(item.preco_unitario).toFixed(2).replace('.', ',') %></td>
+                            <td>R$ <%= parseFloat(item.subtotal).toFixed(2).replace('.', ',') %></td>
+                        </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+                <% } else { %>
+                <p style="color: #666; padding: 20px; text-align: center;">Nenhum produto cadastrado neste pedido</p>
+                <% } %>
+
+                <!-- Observações -->
+                <% if (pedido.observacoes) { %>
+                <h2 class="section-title" style="margin-top: 30px;">Observações</h2>
+                <p style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; color: #333;">
+                    <%= pedido.observacoes %>
+                </p>
+                <% } %>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('file-upload');
+        const btnUpload = document.getElementById('btnUpload');
+        const selectedFileDiv = document.getElementById('selectedFile');
+        const imagePreview = document.getElementById('imagePreview');
+
+        fileInput.addEventListener('change', function(e) {
+            if (this.files && this.files[0]) {
+                const file = this.files[0];
+                
+                // Validar tamanho (10MB)
+                if (file.size > 10 * 1024 * 1024) {
+                    alert('Arquivo muito grande! Máximo 10MB');
+                    this.value = '';
+                    return;
+                }
+                
+                // Mostrar nome do arquivo selecionado
+                selectedFileDiv.textContent = '📄 ' + file.name;
+                
+                // Habilitar botão de upload
+                btnUpload.disabled = false;
+                
+                // Preview da imagem
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    imagePreview.innerHTML = '<img src="' + e.target.result + '" alt="Preview" id="previewImg">';
+                };
+                reader.readAsDataURL(file);
+            } else {
+                selectedFileDiv.textContent = '';
+                btnUpload.disabled = true;
+            }
+        });
+
+        // Validar antes de enviar
+        document.getElementById('uploadForm').addEventListener('submit', function(e) {
+            if (!fileInput.files || !fileInput.files[0]) {
+                e.preventDefault();
+                alert('Por favor, selecione uma imagem primeiro!');
+            }
+        });
+    </script>
+</body>
+</html>
