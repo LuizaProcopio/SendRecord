@@ -1,15 +1,10 @@
 const mysql = require('mysql2')
 
-const conexao = mysql.createConnection({
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASS,
-    database: process.env.DB_NAME
-})
-
-conexao.connect((err)=>{
-    if (err) throw err
-    console.log('Conectado ao Mysql!')
+const conexao = mysql.createPool({
+    host: 'localhost',
+    user: 'root',
+    password: 'Luhar2923',
+    database: 'banco_pi'
 })
 
 module.exports = conexao
