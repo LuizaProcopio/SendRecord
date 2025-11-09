@@ -1,41 +1,160 @@
-const express = require('express')
-const path = require('path')
-const session = require('express-session')
-const app = express()
-require('dotenv').config()
+const express = require('express');
+const path = require('path');
+const session = require('express-session');
+const cors = require('cors');
+require('dotenv').config();
+const Logger = require('./config/logger');
+const AuthenticationSystem = require('./security/authI');
+const RBACSystem = require('./security/rbac');
+const AuditSystem = require('./security/audit');
+const InputValidator = require('./security/validation');
+const securityAuthRoutes = require('./routers/securityAuth');
+const securityUserRoutes = require('./routers/securityUsers');
+const securityAuditRoutes = require('./routers/securityAudit');
+const authRouter = require('./routers/auth');
+const homeRouter = require('./routers/home');
+const vendasRouter = require('./routers/vendas');
+const configRouter = require('./routers/config');
+const app = express();
+const PORT = 4040;
 
-app.set('view engine', 'ejs')
-app.set('views', path.join(__dirname, '../renderer/views'))
-app.use(express.static(path.join(__dirname, '../renderer/public')))
-app.use(express.urlencoded({extended: false}))
-
-app.use(session({
-    secret: 'segredo-super-seguro',
-    resave: false,
-    saveUninitialized: false,
-}))
-
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, '../renderer/views'));
+app.use(express.static(path.join(__dirname, '../renderer/public')));
+app.use(express.urlencoded({ extended: false }));
+app.use(cors({ origin: process.env.FRONTEND_URL || 'http://localhost:5173', credentials: true }));
+app.use(express.json());
+app.use(session({ secret: 'segredo-super-seguro', resave: false, saveUninitialized: false }));
 app.use('/provas_embalagem', express.static(path.join(__dirname, '../provas_embalagem')));
 
 app.use((req, res, next) => {
-    // pega só a primeira parte da URL (ex: "/home" -> "home")
-    const pathPart = req.path.split('/')[1] || 'home'
-    res.locals.currentPage = pathPart
-    res.locals.usuario = req.session.usuario
-    next()
-})
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  next();
+});
 
-// Registrar as rotas DEPOIS dos middlewares
-const authRouter = require('./routers/auth')
-const homeRouter = require('./routers/home')
-const vendasRouter = require('./routers/vendas')
-const configRouter = require('./routers/config')
+const auth = new AuthenticationSystem();
+const rbac = new RBACSystem();
+const audit = new AuditSystem();
+const validator = new InputValidator();
+Logger.success('Sistemas de segurança inicializados');
 
-app.use('/', authRouter)
-app.use('/home', homeRouter)
-app.use('/vendas', vendasRouter)
-app.use('/config', configRouter)
+const conexao = require('./db');
 
-app.listen(4040, () => {
-    console.log('Servidor inicializado em http://localhost:4040')
-})
+app.use(async (req, res, next) => {
+  let token = req.headers['authorization']?.replace('Bearer ', '');
+  if (!token && req.session && req.session.usuario) {
+    const userName = req.session.usuario.nome || req.session.usuario.usuario || req.session.usuario.name;
+    if (userName && !req.session.usuario.id) {
+      try {
+        const [usuarios] = await new Promise((resolve, reject) => {
+          conexao.query('SELECT id FROM usuarios WHERE nome = ? LIMIT 1', [userName], (error, results) => {
+            if (error) reject(error);
+            else resolve([results]);
+          });
+        });
+        if (usuarios && usuarios.length > 0) {
+          const userId = usuarios[0].id;
+          req.session.usuario.id = userId;
+          req.usuarioLogado = {
+            id: userId,
+            nome: userName,
+            email: req.session.usuario.email || userName,
+            tipoAcesso: req.session.usuario.tipo_acesso
+          };
+          console.log('ID encontrado no banco e adicionado:', userId);
+        }
+      } catch (error) {
+        console.error('Erro ao buscar ID do usuário:', error);
+      }
+    } else if (userName && req.session.usuario.id) {
+      req.usuarioLogado = {
+        id: req.session.usuario.id,
+        nome: userName,
+        email: req.session.usuario.email || userName,
+        tipoAcesso: req.session.usuario.tipo_acesso
+      };
+      console.log('Usuário capturado da sessão:', req.usuarioLogado);
+    }
+  } else if (token) {
+    const validation = auth.validateSession(token);
+    if (validation.valid && validation.session) {
+      req.usuarioLogado = {
+        id: validation.session.userId,
+        nome: validation.session.nome,
+        email: validation.session.email,
+        tipoAcesso: validation.session.tipoAcesso
+      };
+      console.log('Usuário capturado do token:', req.usuarioLogado);
+    }
+  }
+  next();
+});
+
+app.use((req, res, next) => {
+  if (req.path.startsWith('/static') || req.path.includes('.css') || req.path.includes('.js') || req.path.includes('.png') || req.path.includes('.jpg')) {
+    return next();
+  }
+  const ipAddress = req.ip || req.connection.remoteAddress || '127.0.0.1';
+  if (req.usuarioLogado) {
+    Logger.api(req.method, req.path, req.usuarioLogado.id, req.usuarioLogado.nome, ipAddress);
+  }
+  next();
+});
+
+setInterval(() => {
+  const before = auth.activeSessions.size;
+  auth.cleanupExpiredSessions();
+  const after = auth.activeSessions.size;
+  if (before !== after) {
+    console.log(`${before - after} sessões expiradas removidas`);
+  }
+}, 5 * 60 * 1000);
+
+app.use((req, res, next) => {
+  const pathPart = req.path.split('/')[1] || 'home';
+  res.locals.currentPage = pathPart;
+  res.locals.usuario = req.session.usuario;
+  next();
+});
+
+app.get('/health', (req, res) => {
+  res.json({ status: 'OK', timestamp: new Date().toISOString(), activeSessions: auth.activeSessions.size });
+});
+
+app.use('/api/security/auth', securityAuthRoutes(auth, validator));
+app.use('/api/security/users', securityUserRoutes(auth, rbac, audit, validator));
+app.use('/api/security/audit', securityAuditRoutes(auth, rbac, audit));
+app.use('/', authRouter);
+app.use('/home', homeRouter);
+app.use('/vendas', vendasRouter);
+app.use('/config', configRouter);
+
+app.use((req, res) => {
+  if (req.path.startsWith('/api/')) {
+    return res.status(404).json({ success: false, message: 'Rota não encontrada' });
+  }
+  res.status(404).send('Página não encontrada');
+});
+
+app.use((err, req, res, next) => {
+  Logger.erro('Erro no servidor', err);
+  if (req.path.startsWith('/api/')) {
+    return res.status(500).json({
+      success: false,
+      message: 'Erro interno do servidor',
+      error: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
+  }
+  res.status(500).send('Erro interno do servidor');
+});
+
+app.listen(PORT, () => {
+  console.log(`Servidor rodando na porta ${PORT}`);
+  console.log(`Health check: http://localhost:${PORT}/health`);
+  console.log(`API Segurança: http://localhost:${PORT}/api/security`);
+});
+
+module.exports = app;
