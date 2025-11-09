@@ -32,7 +32,14 @@ router.post('/login', (req, res) => {
             if (results.length > 0) {
                 const usuario = results[0];
 
-                req.session.usuario = usuario.nome;
+                // ALTERAÇÃO: Criar objeto de usuário com ID
+                req.session.usuario = {
+                    id: usuario.id,              // adicione para log no banco de dados
+                    nome: usuario.nome,
+                    tipo_acesso: usuario.tipo_acesso
+                };
+                
+                // Manter compatibilidade com código antigo
                 req.session.nome = usuario.nome;
                 req.session.tipo_acesso = usuario.tipo_acesso;
 
