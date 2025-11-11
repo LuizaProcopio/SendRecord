@@ -21,24 +21,37 @@
     </header>
     
     <div class="container">
-        <!-- Filtros e busca -->
+        <% if (typeof sucesso !== 'undefined' && sucesso) { %>
+        <div class="success-message">
+            ✓ <%= sucesso %>
+        </div>
+        <% } %>
+        
+        <% if (typeof erro !== 'undefined' && erro) { %>
+        <div class="error-message">
+            ✗ <%= erro %>
+        </div>
+        <% } %>
+
         <div class="filters-section">
             <form method="GET" action="/vendas" class="search-box">
                 <input type="text" name="busca" class="search-input" 
-                       placeholder="Pesquisar por Order ID, Cliente, CPF/CNPJ ou NF" 
-                       value="<%= typeof busca !== 'undefined' ? busca : '' %>">
+                        placeholder="Pesquisar por Order ID, Cliente, CPF/CNPJ ou NF" 
+                        value="<%= typeof busca !== 'undefined' ? busca : '' %>">
             
                 <button type="submit" class="btn-search">🔍 Pesquisar</button>
             </form>
+            
+            <button class="btn-add-pedido" onclick="abrirModalNovoPedido()">
+                Novo Pedido
+            </button>
         </div>
 
-        <!-- Tabela de vendas/pedidos -->
         <div class="table-container">
             <table>
                 <thead>
                     <tr>
                         <% if (typeof pedidos !== 'undefined') { %>
-                            <!-- Cabeçalho para pedidos -->
                             <th>Order ID</th>
                             <th>Data</th>
                             <th>Cliente</th>
@@ -49,7 +62,6 @@
                             <th>Prova</th>
                             <th>Ações</th>
                         <% } else { %>
-                            <!-- Cabeçalho para vendas antigas -->
                             <th>Nº</th>
                             <th>Data</th>
                             <th>Cliente</th>
@@ -75,7 +87,6 @@
                         <% dados.forEach(function(item) { %>
                         <tr>
                             <% if (typeof pedidos !== 'undefined') { %>
-                                <!-- Linha para pedidos -->
                                 <td>
                                     <strong><%= item.order_id %></strong>
                                 </td>
@@ -114,7 +125,6 @@
                                     <% } %>
                                 </td>
                             <% } else { %>
-                                <!-- Linha para vendas antigas -->
                                 <td><%= item.order_id || item.numero_pedido %></td>
                                 <td><%= new Date(item.data_venda || item.created_at).toLocaleDateString('pt-BR') %></td>
                                 <td><%= item.nome_completo || item.customer_name %></td>
@@ -135,5 +145,121 @@
             </table>
         </div>
     </div>
+
+    <div id="modalNovoPedido" class="modal" style="display: none;">
+        <div class="modal-content-large">
+            <span class="modal-close" onclick="fecharModalNovoPedido()">&times;</span>
+            
+            <h2 style="margin-bottom: 20px;"> Novo Pedido</h2>
+            
+            <form id="formNovoPedido" method="POST" action="/vendas/novo">
+                <div class="form-section">
+                    <h3>📦 Dados do Pedido</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="order_id">Order ID *</label>
+                            <input type="text" id="order_id" name="order_id" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="source">Origem *</label>
+                            <select id="source" name="source" required>
+                                <option value="">Selecione...</option>
+                                <option value="Manual">Loja Física / Manual</option>
+                                <option value="WhatsApp">WhatsApp</option>
+                                <option value="Mercado_Livre">Mercado Livre</option>
+                                <option value="Wix">Wix / Site</option>
+                                <option value="Outro">Outro</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>👤 Dados do Cliente</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="customer_name">Nome Completo *</label>
+                            <input type="text" id="customer_name" name="customer_name" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="cpf_cnpj">CPF/CNPJ</label>
+                            <input type="text" id="cpf_cnpj" name="cpf_cnpj">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="telefone">Telefone</label>
+                            <input type="text" id="telefone" name="telefone">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input type="email" id="email" name="email">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>📝 Observações</h3>
+                    <textarea name="observacoes" rows="3" placeholder="Observações sobre o pedido (opcional)"></textarea>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn-cancel" onclick="fecharModalNovoPedido()">Cancelar</button>
+                    <button type="submit" class="btn-submit">💾 Salvar Pedido</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function abrirModalNovoPedido() {
+            document.getElementById('modalNovoPedido').style.display = 'flex';
+        }
+
+        function fecharModalNovoPedido() {
+            document.getElementById('modalNovoPedido').style.display = 'none';
+        }
+
+        // Fechar modal ao clicar fora
+        window.onclick = function(event) {
+            const modal = document.getElementById('modalNovoPedido');
+            if (event.target === modal) {
+                fecharModalNovoPedido();
+            }
+        }
+
+        // Máscara para CPF/CNPJ
+        document.getElementById('cpf_cnpj').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length <= 11) {
+                // CPF
+                value = value.replace(/(\d{3})(\d)/, '$1.$2');
+                value = value.replace(/(\d{3})(\d)/, '$1.$2');
+                value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+            } else {
+                // CNPJ
+                value = value.replace(/^(\d{2})(\d)/, '$1.$2');
+                value = value.replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3');
+                value = value.replace(/\.(\d{3})(\d)/, '.$1/$2');
+                value = value.replace(/(\d{4})(\d)/, '$1-$2');
+            }
+            e.target.value = value;
+        });
+
+        // Máscara para telefone
+        document.getElementById('telefone').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length <= 10) {
+                value = value.replace(/(\d{2})(\d)/, '($1) $2');
+                value = value.replace(/(\d{4})(\d)/, '$1-$2');
+            } else {
+                value = value.replace(/(\d{2})(\d)/, '($1) $2');
+                value = value.replace(/(\d{5})(\d)/, '$1-$2');
+            }
+            e.target.value = value;
+        });
+    </script>
 </body>
 </html>

@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/style.css"> 
+    <title><%= acao === 'criar' ? 'Novo Usuário' : 'Editar Usuário' %> - MVERNON</title>
+</head>
+<body>
+    
+    <header class="header">
+        <div class="logo">
+            <img src="../img/Marca.png" alt="Logo da Loja" width="300">
+        </div>
+        
+        <%- include('partials/header', { 
+            nome: nome, 
+            tipo_acesso: tipo_acesso,
+            currentPage: currentPage
+        }) %>
+    </header>
+
+    <main class="container">
+        <% if (tipo_acesso !== 'admin' && tipo_acesso !== 'gerente') { %>
+            <div class="error-message" style="max-width: 800px; margin: 40px auto;">
+                <h2 style="margin-bottom: 10px;">⛔ Acesso Negado</h2>
+                <p>Você não tem permissão para acessar esta página.</p>
+                <p>Apenas <strong>Administradores</strong> e <strong>Gerentes</strong> podem gerenciar usuários.</p>
+                <a href="/config" class="back-button" style="margin-top: 20px; display: inline-flex;">
+                    ← Voltar
+                </a>
+            </div>
+        <% } else { %>
+            <a href="/config" class="back-button">
+                ← Voltar
+            </a>
+
+            <div style="max-width: 800px; margin: 0 auto;">
+                <h1 style="color: #fff; margin-bottom: 30px;">
+                    <%= acao === 'criar' ? 'Novo Usuário' : 'Editar Usuário' %>
+                </h1>
+
+                <% if (typeof erro !== 'undefined' && erro) { %>
+                    <div class="error-message">
+                        <%= erro %>
+                    </div>
+                <% } %>
+
+                <div class="details-section">
+                    <form method="POST" action="<%= acao === 'criar' ? '/config/criar' : '/config/editar/' + usuarioEdit.id %>">
+                        
+                        <div class="info-item" style="margin-bottom: 20px;">
+                            <label class="info-label" for="nome">Nome Completo *</label>
+                            <input 
+                                type="text" 
+                                id="nome" 
+                                name="nome" 
+                                class="search-input" 
+                                value="<%= acao === 'editar' && usuarioEdit ? usuarioEdit.nome : '' %>"
+                                required
+                                style="width: 100%;"
+                            >
+                        </div>
+
+                        <div class="info-item" style="margin-bottom: 20px;">
+                            <label class="info-label" for="email">Email *</label>
+                            <input 
+                                type="email" 
+                                id="email" 
+                                name="email" 
+                                class="search-input" 
+                                value="<%= acao === 'editar' && usuarioEdit ? usuarioEdit.email : '' %>"
+                                required
+                                style="width: 100%;"
+                            >
+                        </div>
+
+                        <div class="info-item" style="margin-bottom: 20px;">
+                            <label class="info-label" for="senha">
+                                Senha <%= acao === 'editar' ? '(deixe em branco para manter a atual)' : '*' %>
+                            </label>
+                            <input 
+                                type="password" 
+                                id="senha" 
+                                name="senha" 
+                                class="search-input" 
+                                <%= acao === 'criar' ? 'required' : '' %>
+                                style="width: 100%;"
+                                minlength="3"
+                            >
+                            <small style="color: #999; font-size: 12px; margin-top: 5px; display: block;">
+                                Mínimo 3 caracteres
+                            </small>
+                        </div>
+
+                        <div class="info-item" style="margin-bottom: 20px;">
+                            <label class="info-label" for="tipo_acesso">Tipo de Acesso *</label>
+                            <select 
+                                id="tipo_acesso" 
+                                name="tipo_acesso" 
+                                class="status-selector" 
+                                required
+                                style="width: 100%;"
+                            >
+                                <option value="">Selecione...</option>
+                                <option value="admin" <%= acao === 'editar' && usuarioEdit && usuarioEdit.tipo_acesso === 'admin' ? 'selected' : '' %>>
+                                    Administrador
+                                </option>
+                                <option value="operador" <%= acao === 'editar' && usuarioEdit && usuarioEdit.tipo_acesso === 'operador' ? 'selected' : '' %>>
+                                    Operador
+                                </option>
+                            </select>
+                        </div>
+
+                        <div class="info-item" style="margin-bottom: 30px;">
+                            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                                <input 
+                                    type="checkbox" 
+                                    name="ativo" 
+                                    value="1"
+                                    <%= acao === 'criar' || (acao === 'editar' && usuarioEdit && usuarioEdit.ativo) ? 'checked' : '' %>
+                                    style="width: 20px; height: 20px; cursor: pointer;"
+                                >
+                                <span class="info-label" style="margin: 0;">Usuário Ativo</span>
+                            </label>
+                        </div>
+
+                        <div style="display: flex; gap: 15px;">
+                            <button type="submit" class="btn-search" style="flex: 1;">
+                                <%= acao === 'criar' ? 'Criar Usuário' : 'Salvar Alterações' %>
+                            </button>
+                            <a href="/config" class="btn-visualizar" style="flex: 1; text-align: center; background-color: #6c757d;">
+                                Cancelar
+                            </a>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+        <% } %>
+    </main>
+
+</body>
+</html>

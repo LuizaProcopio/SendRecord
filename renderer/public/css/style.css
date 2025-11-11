@@ -1,4 +1,4 @@
-/* styleGerente.css — versão otimizada e sem duplicações */
+/* styleUnificado.css — Versão Otimizada e Completa */
 
 /* ---------- RESET GERAL ---------- */
 * {
@@ -210,31 +210,35 @@ main {
     padding: 0 10px;
 }
 
-/* ---------- CONTAINER PRINCIPAL ---------- */
 .container {
     padding: 20px 30px;
     max-width: 1400px;
     margin: 0 auto;
 }
 
-/* ---------- BUSCA E FILTROS ---------- */
 .filters-section {
+    display: flex;
+    justify-content: space-between;
+    gap: 15px; 
+    margin-bottom: 20px;
+    align-items: center;
+
+    /* Propriedades do 2º bloco, aplicadas para estilização de fundo/padding */
     background-color: #f5f5f5;
     padding: 20px;
     border-radius: 10px;
-    margin-bottom: 20px;
 }
 
 .search-box {
     display: flex;
     gap: 10px;
     margin-bottom: 0;
-    flex-wrap: wrap;
+    flex: 1;
 }
 
 .search-input {
     flex: 1;
-    min-width: 250px;
+    min-width: 350px;
     padding: 12px 20px;
     border: 1px solid #ddd;
     border-radius: 5px;
@@ -250,26 +254,91 @@ main {
     cursor: pointer;
 }
 
-/* ---------- BOTÕES ---------- */
-.btn-search {
+/* ---------- BOTÕES GERAIS E DE AÇÃO ---------- */
+/* Botão de Adicionar Pedido (btn-add-pedido) */
+.btn-add-pedido {
+    padding: 12px 24px;
+    background: linear-gradient(135deg, #c41e3a 0%, #a01818 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+    box-shadow: 0 10px 18px rgba(196,30,58,0.12);
+}
+
+.btn-add-pedido:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 18px rgba(196,30,58,0.12);
+}
+
+/* Ações do Formulário */
+.form-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: flex-end;
+    margin-top: 25px;
+    padding-top: 20px;
+    border-top: 2px solid #eee;
+}
+
+/* Botão Cancelar (btn-cancel) */
+.btn-cancel {
     padding: 12px 30px;
-    background-color: #c41e1e;
+    background: #6c757d;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.btn-cancel:hover {
+    background: #5a6268;
+}
+
+/* Botão Enviar (btn-submit) */
+.btn-submit {
+    padding: 12px 30px;
+    background: linear-gradient(135deg, #c41e3a 0%, #a01818 100%);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.3s, box-shadow 0.3s;
+    box-shadow: 0 6px 20px rgba(196, 30, 58, 0.6);
+}
+
+.btn-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+}
+
+.btn-search {
+padding: 12px 24px;
+    background: linear-gradient(135deg, #c41e3a 0%, #a01818 100%); 
     color: #fff;
     border: none;
-    border-radius: 5px;
+    border-radius: 8px; 
     cursor: pointer;
-    font-weight: bold;
+    font-weight: 600; 
     font-size: 14px;
-    transition: background-color 0.3s;
+    transition: all 0.3s ease; 
+    box-shadow: 0 4px 15px rgba(196, 30, 58, 0.4); 
 }
 
 .btn-search:hover {
-    background-color: #a01818;
+    transform: translateY(-2px); 
+    box-shadow: 0 6px 20px rgba(196, 30, 58, 0.6);
 }
 
 .btn-ver {
     padding: 6px 20px;
-    background-color: #c41e1e;
+    background-color: #c41e3a;
     color: #fff;
     border: none;
     border-radius: 5px;
@@ -309,7 +378,7 @@ main {
     align-items: center;
     gap: 10px;
     padding: 12px 24px;
-    background-color: #c41e1e;
+    background-color: #c41e3a;
     color: #fff;
     text-decoration: none;
     border-radius: 5px;
@@ -391,6 +460,176 @@ main {
     gap: 10px;
     margin-top: 15px;
 }
+
+/* ---------- FORMULÁRIO ---------- */
+.form-section {
+    margin-bottom: 25px;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border-left: 4px solid #c41e3a;
+}
+
+.form-section h3 {
+    margin: 0 0 15px 0;
+    color: #333;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 15px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group label {
+    font-weight: 600;
+    color: #555;
+    margin-bottom: 5px;
+    font-size: 13px;
+}
+
+.form-group input,
+.form-group select,
+.form-section textarea {
+    padding: 10px 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: border-color 0.3s, box-shadow 0.3s;
+    background: white;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-section textarea:focus {
+    outline: none;
+    border-color: #c41e3a;
+    box-shadow: 0 0 0 3px rgba(196, 30, 58, 0.1);
+}
+
+.form-section textarea {
+    width: 100%;
+    resize: vertical;
+    font-family: inherit;
+}
+
+/* ---------- MODAL (ADICIONAR PEDIDO) - Grande ---------- */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000; /* Z-index do 1º bloco */
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7); /* Background do 1º bloco */
+    backdrop-filter: blur(5px);
+    align-items: flex-start;
+    justify-content: center;
+    overflow-y: auto;
+
+    /* Propriedades para Modal de Imagem */
+    /* Z-index 9999 e background-color: rgba(0,0,0,0.95) foram mantidos para o modal de imagem no .modal-image-full-screen abaixo para maior especificidade */
+}
+
+/* Conteúdo Modal Grande (Formulário) */
+.modal-content-large {
+    background-color: #fff;
+    padding: 30px;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 900px;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    box-shadow: 0 10px 50px rgba(0, 0, 0, 0.3);
+    animation: slideDown 0.3s ease;
+}
+
+/* Animação Modal Grande */
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Fechar Modal (Comum para todos os modais no 1º bloco) */
+.modal-close {
+    position: absolute;
+    right: 20px;
+    top: 20px;
+    font-size: 28px;
+    font-weight: bold;
+    color: #999;
+    cursor: pointer;
+    transition: color 0.3s;
+}
+
+.modal-close:hover {
+    color: #333;
+}
+
+/* ---------- MODAL (GALERIA) - Imagem em Tela Cheia ---------- */
+
+/* Ajuste para Modal de Galeria (usa a classe .modal, mas precisa de estilos específicos do 2º bloco) */
+.modal.modal-image-full-screen {
+    z-index: 9999; /* Z-index maior para sobrepor tudo */
+    background-color: rgba(0,0,0,0.95);
+    animation: fadeIn 0.3s;
+    backdrop-filter: none; /* Remove o blur do outro modal */
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.modal-content {
+    position: relative;
+    margin: auto;
+    padding: 20px;
+    max-width: 90%;
+    max-height: 90%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+}
+
+.modal-content img {
+    max-width: 100%;
+    max-height: 90vh;
+    object-fit: contain;
+    border-radius: 8px;
+    box-shadow: 0 8px 32px rgba(196, 30, 30, 0.5);
+}
+
+/* Fechar Modal (Específico para Galeria, com estilos diferentes) */
+.modal-image-full-screen .modal-close {
+    top: 20px;
+    right: 40px;
+    color: #fff;
+    font-size: 40px;
+    font-weight: bold;
+    z-index: 10000;
+}
+
+.modal-image-full-screen .modal-close:hover {
+    color: #c41e1e;
+}
+
 
 /* ---------- TABELAS ---------- */
 .table-container {
@@ -535,6 +774,70 @@ tr:hover td {
 .not-verified-badge {
     color: #f44336;
     font-weight: bold;
+}
+
+/* ---------- MENSAGENS E ALERTAS ---------- */
+.success-message {
+    /* Consolidação de estilos de sucesso */
+    font-weight: 500; /* Do 1º bloco */
+    margin-bottom: 20px; /* Consolidado */
+    padding: 15px; /* Comum, mas adicionado o 20px do 1º bloco */
+    border-radius: 8px; /* Do 1º bloco */
+
+    /* Estilos do 1º bloco */
+    background: #d4edda;
+    color: #155724;
+    padding-right: 20px; /* Compensação de padding do 1º bloco */
+    border-left: 4px solid #28a745;
+
+    /* Propriedades do 2º bloco, sobrescritas ou removidas, mantendo o 1º bloco como base visual para o formulário */
+}
+
+.error-message {
+    /* Consolidação de estilos de erro */
+    font-weight: 500; /* Do 1º bloco */
+    margin-bottom: 20px; /* Consolidado */
+    padding: 15px; /* Comum, mas adicionado o 20px do 1º bloco */
+    border-radius: 8px; /* Do 1º bloco */
+
+    /* Estilos do 1º bloco */
+    background: #f8d7da;
+    color: #721c24;
+    padding-right: 20px; /* Compensação de padding do 1º bloco */
+    border-left: 4px solid #dc3545;
+
+    /* Propriedades do 2º bloco, sobrescritas ou removidas, mantendo o 1º bloco como base visual para o formulário */
+}
+
+/* Estilos de Alerta Adicionais (do 2º bloco) */
+.alert {
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+}
+
+.alert-error {
+    background-color: #f44336;
+    color: #fff;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 80px 20px;
+    background-color: #2a2a2a;
+    border-radius: 10px;
+    border: 1px solid #3a3a3a;
+}
+
+.empty-state-icon {
+    font-size: 80px;
+    margin-bottom: 20px;
+    opacity: 0.3;
+}
+
+.empty-state-text {
+    font-size: 18px;
+    color: #999;
 }
 
 /* ---------- DETALHES DO PEDIDO ---------- */
@@ -795,109 +1098,6 @@ input[type="file"] {
     font-size: 20px;
 }
 
-/* ---------- MODAL ---------- */
-.modal {
-    display: none;
-    position: fixed;
-    z-index: 9999;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0,0,0,0.95);
-    animation: fadeIn 0.3s;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-
-.modal-content {
-    position: relative;
-    margin: auto;
-    padding: 20px;
-    max-width: 90%;
-    max-height: 90%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100vh;
-}
-
-.modal-content img {
-    max-width: 100%;
-    max-height: 90vh;
-    object-fit: contain;
-    border-radius: 8px;
-    box-shadow: 0 8px 32px rgba(196, 30, 30, 0.5);
-}
-
-.modal-close {
-    position: absolute;
-    top: 20px;
-    right: 40px;
-    color: #fff;
-    font-size: 40px;
-    font-weight: bold;
-    cursor: pointer;
-    z-index: 10000;
-    transition: color 0.3s;
-}
-
-.modal-close:hover {
-    color: #c41e1e;
-}
-
-/* ---------- MENSAGENS E ALERTAS ---------- */
-.success-message {
-    background-color: #4caf50;
-    color: #fff;
-    padding: 15px;
-    border-radius: 5px;
-    margin-bottom: 20px;
-    text-align: center;
-}
-
-.error-message {
-    background-color: #f44336;
-    color: #fff;
-    padding: 15px;
-    border-radius: 5px;
-    margin-bottom: 20px;
-    text-align: center;
-}
-
-.alert {
-    padding: 15px;
-    border-radius: 5px;
-    margin-bottom: 20px;
-}
-
-.alert-error {
-    background-color: #f44336;
-    color: #fff;
-}
-
-.empty-state {
-    text-align: center;
-    padding: 80px 20px;
-    background-color: #2a2a2a;
-    border-radius: 10px;
-    border: 1px solid #3a3a3a;
-}
-
-.empty-state-icon {
-    font-size: 80px;
-    margin-bottom: 20px;
-    opacity: 0.3;
-}
-
-.empty-state-text {
-    font-size: 18px;
-    color: #999;
-}
-
 /* ---------- UTILITÁRIOS ---------- */
 .has-image-icon {
     color: #4caf50;
@@ -919,6 +1119,36 @@ input[type="file"] {
 }
 
 @media (max-width: 768px) {
+    /* Ajustes para a seção de Filtros (do 1º bloco) */
+    .filters-section {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .btn-add-pedido {
+        width: 100%;
+    }
+
+    /* Ajustes para o Modal (do 1º bloco) */
+    .modal-content-large {
+        width: 95%;
+        padding: 20px;
+        max-height: 95vh;
+    }
+
+    /* Ajustes para Formulário (do 1º bloco) */
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .btn-cancel,
+    .btn-submit {
+        width: 100%;
+    }
     .content-grid {
         grid-template-columns: 1fr;
     }

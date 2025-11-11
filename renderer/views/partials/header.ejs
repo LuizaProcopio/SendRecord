@@ -19,7 +19,7 @@
 <nav class="navigation">
     <a href="/home" class="nav-item <%= currentPage === 'home' ? 'active' : '' %>">Home</a>
     <a href="/vendas" class="nav-item <%= currentPage === 'vendas' ? 'active' : '' %>">Vendas</a>
-    <% if (tipo_acesso && tipo_acesso === 'gerente') { %>
+    <% if (tipo_acesso && tipo_acesso === 'admin') { %>
         <a href="/config" class="nav-item <%= currentPage === 'config' ? 'active' : '' %>">Configuração</a>
     <% } %>
 </nav>
