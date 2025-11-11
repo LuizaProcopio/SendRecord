@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/css/style.css"> 
-    <title>Vendas - MVERNON</title>
+    <title>Configurações - MVERNON</title>
 </head>
 <body>
     
@@ -19,7 +19,66 @@
             currentPage: currentPage
         }) %>
     </header>
-    <h1> teste config</h1>
+
+    <main class="container">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+            <h1 style="color: #fff; margin: 0;">Usuários do Sistema</h1>
+            <a href="/config/novo" class="btn-visualizar" style="background-color: #c41e3a;">
+                Novo Usuário
+            </a>
+        </div>
+
+        <% if (typeof mensagem !== 'undefined' && mensagem) { %>
+            <div class="success-message">
+                <%= mensagem %>
+            </div>
+        <% } %>
+
+        <% if (typeof erro !== 'undefined' && erro) { %>
+            <div class="error-message">
+                <%= erro %>
+            </div>
+        <% } %>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Email</th>
+                        <th>Tipo de Acesso</th>
+                        <th>Data de Criação</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if (typeof usuarios !== 'undefined' && usuarios && usuarios.length > 0) { %>
+                        <% usuarios.forEach(usuario => { %>
+                            <tr>
+                                <td><strong><%= usuario.nome %></strong></td>
+                                <td><%= usuario.email %></td>
+                                <td>
+                                    <span class="status-badge">
+                                        <%= usuario.tipo_acesso %>
+                                    </span>
+                                </td>
+                                <td><%= new Date(usuario.data_criacao).toLocaleDateString('pt-BR') %></td>
+                                <td>
+                                    <a href="/config/editar/<%= usuario.id %>" class="btn-ver">Editar</a>
+                                </td>
+                            </tr>
+                        <% }); %>
+                    <% } else { %>
+                        <tr>
+                            <td colspan="5" style="text-align: center; padding: 40px;">
+                                Nenhum usuário encontrado
+                            </td>
+                        </tr>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
+    </main>
 
 </body>
 </html>
