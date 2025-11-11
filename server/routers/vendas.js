@@ -50,7 +50,9 @@ function verificarAutenticacao(req, res, next) {
     next();
 }
 
+// ======================
 // Rota principal - Lista de vendas/pedidos
+// ======================
 router.get('/', verificarAutenticacao, async (req, res) => {
     try {
         const { busca } = req.query;
@@ -115,14 +117,211 @@ router.get('/', verificarAutenticacao, async (req, res) => {
     }
 });
 
+
+// ======================
+// Rota para criar novo pedido
+// ======================
+router.post('/novo', verificarAutenticacao, async (req, res) => {
+    try {
+        const {
+            order_id,
+            source,
+            customer_name,
+            cpf_cnpj,
+            telefone,
+            email,
+            cep,
+            logradouro,
+            numero,
+            complemento,
+            bairro,
+            cidade,
+            estado,
+            observacoes
+        } = req.body;
+
+        console.log('Criando novo pedido:', { order_id, customer_name, source });
+
+        // Buscar ID do usuário
+        const usuarios = await query('SELECT id FROM usuarios WHERE nome = ?', [req.session.nome]);
+        const usuarioId = usuarios.length > 0 ? usuarios[0].id : null;
+
+        if (!usuarioId) {
+            return res.redirect('/vendas?erro=' + encodeURIComponent('Usuário não encontrado'));
+        }
+
+        // Verificar se order_id já existe
+        const pedidoExiste = await query('SELECT id FROM pedidos WHERE order_id = ?', [order_id]);
+        if (pedidoExiste.length > 0) {
+            return res.redirect('/vendas?erro=' + encodeURIComponent('Order ID já existe no sistema'));
+        }
+
+        // 1. Criar ou buscar cliente
+        let clienteId = null;
+        
+        if (cpf_cnpj && cpf_cnpj.trim() !== '') {
+            const cpfCnpjLimpo = cpf_cnpj.replace(/\D/g, '');
+            const clienteExistente = await query(
+                'SELECT id FROM clientes WHERE cpf_cnpj = ?',
+                [cpfCnpjLimpo]
+            );
+
+            if (clienteExistente.length > 0) {
+                clienteId = clienteExistente[0].id;
+                
+                await query(`
+                    UPDATE clientes 
+                    SET nome = ?, email = ?, telefone = ?, ultima_compra = CURDATE(), total_pedidos = total_pedidos + 1
+                    WHERE id = ?
+                `, [customer_name, email || null, telefone || null, clienteId]);
+            }
+        }
+
+        if (!clienteId) {
+            const clientePorNome = await query(
+                'SELECT id FROM clientes WHERE nome = ? LIMIT 1',
+                [customer_name]
+            );
+
+            if (clientePorNome.length > 0) {
+                clienteId = clientePorNome[0].id;
+                
+                await query(`
+                    UPDATE clientes 
+                    SET email = COALESCE(?, email), 
+                        telefone = COALESCE(?, telefone),
+                        cpf_cnpj = COALESCE(?, cpf_cnpj),
+                        ultima_compra = CURDATE(),
+                        total_pedidos = total_pedidos + 1
+                    WHERE id = ?
+                `, [email, telefone, cpf_cnpj ? cpf_cnpj.replace(/\D/g, '') : null, clienteId]);
+            }
+        }
+
+        if (!clienteId) {
+            const tipoCliente = cpf_cnpj && cpf_cnpj.replace(/\D/g, '').length > 11 ? 'pessoa_juridica' : 'pessoa_fisica';
+            
+            const resultCliente = await query(`
+                INSERT INTO clientes (nome, cpf_cnpj, email, telefone, tipo_cliente, ultima_compra, total_pedidos)
+                VALUES (?, ?, ?, ?, ?, CURDATE(), 1)
+            `, [
+                customer_name,
+                cpf_cnpj ? cpf_cnpj.replace(/\D/g, '') : null,
+                email || null,
+                telefone || null,
+                tipoCliente
+            ]);
+            
+            clienteId = resultCliente.insertId;
+            console.log('✓ Novo cliente criado. ID:', clienteId);
+        }
+
+        if (cep && logradouro && cidade && estado) {
+            const cepLimpo = cep.replace(/\D/g, '');
+            const enderecoExistente = await query(
+                'SELECT id FROM enderecos_clientes WHERE cliente_id = ? AND principal = TRUE',
+                [clienteId]
+            );
+
+            if (enderecoExistente.length > 0) {
+                await query(`
+                    UPDATE enderecos_clientes
+                    SET cep = ?, logradouro = ?, numero = ?, complemento = ?,
+                        bairro = ?, cidade = ?, estado = ?, tipo_endereco = 'principal'
+                    WHERE id = ?
+                `, [
+                    cepLimpo,
+                    logradouro,
+                    numero || 'S/N',
+                    complemento || null,
+                    bairro || '',
+                    cidade,
+                    estado,
+                    enderecoExistente[0].id
+                ]);
+            } else {
+                await query(`
+                    INSERT INTO enderecos_clientes 
+                    (cliente_id, tipo_endereco, cep, logradouro, numero, complemento, bairro, cidade, estado, principal)
+                    VALUES (?, 'principal', ?, ?, ?, ?, ?, ?, ?, TRUE)
+                `, [
+                    clienteId,
+                    cepLimpo,
+                    logradouro,
+                    numero || 'S/N',
+                    complemento || null,
+                    bairro || '',
+                    cidade,
+                    estado
+                ]);
+            }
+        }
+
+        let sourceFormatado = source;
+        const sourceMap = {
+            'loja_fisica': 'Manual',
+            'whatsapp': 'Manual',
+            'marketplace': 'Mercado_Livre',
+            'site': 'Wix',
+            'wix': 'Wix',
+            'mercado_livre': 'Mercado_Livre',
+            'manual': 'Manual'
+        };
+        
+        sourceFormatado = sourceMap[source.toLowerCase()] || 'Manual';
+
+        const resultPedido = await query(`
+            INSERT INTO pedidos (
+                order_id,
+                source,
+                cliente_id,
+                customer_name,
+                item_count,
+                valor_total,
+                status,
+                observacoes,
+                usuario_criacao_id,
+                created_at
+            ) VALUES (?, ?, ?, ?, 0, 0.00, 'Pendente', ?, ?, NOW())
+        `, [
+            order_id.toUpperCase(),
+            sourceFormatado,
+            clienteId,
+            customer_name,
+            observacoes || null,
+            usuarioId
+        ]);
+
+        const pedidoId = resultPedido.insertId;
+
+        await query(`
+            INSERT INTO auditoria_sistema (usuario_id, acao, descricao, tabela_afetada, registro_id)
+            VALUES (?, 'CRIAR_PEDIDO', ?, 'pedidos', ?)
+        `, [
+            usuarioId,
+            `Pedido ${order_id.toUpperCase()} criado manualmente via sistema`,
+            pedidoId
+        ]);
+
+        console.log('✓ Pedido criado com sucesso! ID:', pedidoId);
+        res.redirect(`/vendas/detalhes/${pedidoId}?success=1`);
+
+    } catch (error) {
+        console.error('Erro ao criar pedido:', error);
+        res.redirect('/vendas?erro=' + encodeURIComponent('Erro ao criar pedido: ' + error.message));
+    }
+});
+
+
+// ======================
 // Rota para detalhes do pedido
+// ======================
 router.get('/detalhes/:id', verificarAutenticacao, async (req, res) => {
     try {
         const pedidoId = req.params.id;
 
         console.log('Buscando detalhes do pedido:', pedidoId);
 
-        // Buscar dados do pedido
         const pedidos = await query(`
             SELECT 
                 p.*,
@@ -164,8 +363,6 @@ router.get('/detalhes/:id', verificarAutenticacao, async (req, res) => {
 
         const prova = provas.length > 0 ? provas[0] : null;
 
-
-        // Buscar itens do pedido
         const itens = await query(`
             SELECT 
                 ip.*,
@@ -180,7 +377,6 @@ router.get('/detalhes/:id', verificarAutenticacao, async (req, res) => {
             ORDER BY ip.id
         `, [pedidoId]);
 
-        // Buscar histórico de escaneamento
         const historico = await query(`
             SELECT 
                 he.*,
@@ -194,7 +390,6 @@ router.get('/detalhes/:id', verificarAutenticacao, async (req, res) => {
             LIMIT 20
         `, [pedidoId]);
 
-        // Calcular progresso
         const totalItens = itens.reduce((sum, item) => sum + item.quantity_required, 0);
         const itensEscaneados = itens.reduce((sum, item) => sum + item.quantity_scanned, 0);
         const progresso = totalItens > 0 ? Math.round((itensEscaneados / totalItens) * 100) : 0;
@@ -210,8 +405,6 @@ router.get('/detalhes/:id', verificarAutenticacao, async (req, res) => {
             progresso: progresso,
             totalItens: totalItens,
             itensEscaneados: itensEscaneados,
-
-            // 🔹 Correção: adiciona as variáveis para o EJS
             success: req.query.success || null,
             erro: req.query.erro || null
         });
@@ -221,6 +414,7 @@ router.get('/detalhes/:id', verificarAutenticacao, async (req, res) => {
         res.status(500).send('Erro ao carregar detalhes do pedido: ' + error.message);
     }
 });
+
 
 // Rota para atualizar status do pedido
 router.post('/detalhes/:id/status', verificarAutenticacao, async (req, res) => {
