@@ -1,3 +1,4 @@
+// server/security/auth.js
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const conexao = require('../db.js');
@@ -6,28 +7,17 @@ const Logger = require('../config/logger.js');
 class AuthenticationSystem {
   constructor() {
     this.SALT_ROUNDS = 10;
-    this.MAX_LOGIN_ATTEMPTS = 5;
-    this.LOCKOUT_TIME = 15 * 60 * 1000;
     this.SESSION_TIMEOUT = 30 * 60 * 1000;
     this.activeSessions = new Map();
   }
 
   async hashPassword(plainPassword) {
-    try {
-      const salt = await bcrypt.genSalt(this.SALT_ROUNDS);
-      const hash = await bcrypt.hash(plainPassword, salt);
-      return hash;
-    } catch (error) {
-      throw new Error('Erro ao criar hash da senha: ' + error.message);
-    }
+    const salt = await bcrypt.genSalt(this.SALT_ROUNDS);
+    return await bcrypt.hash(plainPassword, salt);
   }
 
   async verifyPassword(plainPassword, hashedPassword) {
-    try {
-      return await bcrypt.compare(plainPassword, hashedPassword);
-    } catch (error) {
-      throw new Error('Erro ao verificar senha: ' + error.message);
-    }
+    return await bcrypt.compare(plainPassword, hashedPassword);
   }
 
   generateSessionToken() {
@@ -63,7 +53,7 @@ class AuthenticationSystem {
     return new Promise((resolve, reject) => {
       conexao.query(query, [email], (error, rows) => {
         if (error) {
-          Logger.error('Erro ao verificar bloqueio', error);
+          Logger.erro('Erro ao verificar bloqueio', error);
           return resolve(false);
         }
         resolve(rows[0].failed_attempts >= this.MAX_LOGIN_ATTEMPTS);
@@ -73,11 +63,6 @@ class AuthenticationSystem {
 
   async login(email, password, ipAddress) {
     try {
-      if (await this.isAccountLocked(email)) {
-        await this.registerLoginAttempt(email, false, ipAddress);
-        throw new Error('Conta bloqueada por excesso de tentativas. Tente novamente em 15 minutos.');
-      }
-
       const query = `
         SELECT id, nome, email, senha, tipo_acesso, ativo
         FROM usuarios
@@ -97,12 +82,14 @@ class AuthenticationSystem {
 
       const user = users[0];
       const isValidPassword = await this.verifyPassword(password, user.senha);
+
       if (!isValidPassword) {
         await this.registerLoginAttempt(email, false, ipAddress);
         throw new Error('Credenciais inválidas');
       }
 
       await this.registerLoginAttempt(email, true, ipAddress);
+
       const sessionToken = this.generateSessionToken();
       const sessionData = {
         userId: user.id,
@@ -113,6 +100,7 @@ class AuthenticationSystem {
         lastActivity: Date.now(),
         ipAddress: ipAddress
       };
+
       this.activeSessions.set(sessionToken, sessionData);
 
       await new Promise((resolve, reject) => {
@@ -143,12 +131,13 @@ class AuthenticationSystem {
   validateSession(sessionToken) {
     const session = this.activeSessions.get(sessionToken);
     if (!session) return { valid: false, reason: 'Sessão não encontrada' };
+
     const now = Date.now();
-    const sessionAge = now - session.lastActivity;
-    if (sessionAge > this.SESSION_TIMEOUT) {
+    if (now - session.lastActivity > this.SESSION_TIMEOUT) {
       this.activeSessions.delete(sessionToken);
       return { valid: false, reason: 'Sessão expirada' };
     }
+
     session.lastActivity = now;
     this.activeSessions.set(sessionToken, session);
     return { valid: true, session };
@@ -173,11 +162,14 @@ class AuthenticationSystem {
       });
 
       if (users.length === 0) throw new Error('Usuário não encontrado');
+
       const isValid = await this.verifyPassword(oldPassword, users[0].senha);
       if (!isValid) throw new Error('Senha atual incorreta');
+
       if (newPassword.length < 8) throw new Error('Nova senha deve ter no mínimo 8 caracteres');
 
       const newHash = await this.hashPassword(newPassword);
+
       await new Promise((resolve, reject) => {
         conexao.query('UPDATE usuarios SET senha = ? WHERE id = ?', [newHash, userId], (error, results) => {
           if (error) return reject(error);

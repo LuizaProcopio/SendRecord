@@ -41,44 +41,18 @@ class InputValidator {
     return { valid: true, value: sanitized };
   }
 
-  validatePassword(password, options = {}) {
-    const { minLength = 8 } = options;
-
-    if (!password) {
-      return { valid: false, error: 'Senha é obrigatória' };
-    }
-
-    if (password.length < minLength) {
-      return { valid: false, error: `Senha deve ter no mínimo ${minLength} caracteres` };
-    }
-
-    return { valid: true };
+validatePassword(password) {
+  if (!password) {
+    return { valid: false, error: 'Senha é obrigatória' };
   }
 
-  detectSQLInjection(input) {
-    if (typeof input !== 'string') return false;
-    const upperInput = input.toUpperCase();
-    return this.sqlBlacklist.some(dangerous => upperInput.includes(dangerous));
+  // Apenas verificar se não está vazia
+  if (password.trim().length === 0) {
+    return { valid: false, error: 'Senha não pode ser vazia' };
   }
 
-  validateInput(input, fieldName = 'campo') {
-    if (input === null || input === undefined) {
-      return { valid: true, value: input };
-    }
-
-    if (typeof input === 'string') {
-      if (this.detectSQLInjection(input)) {
-        return { 
-          valid: false, 
-          error: `${fieldName} contém caracteres não permitidos`,
-          threat: 'SQL_INJECTION_DETECTED'
-        };
-      }
-      return { valid: true, value: this.sanitizeString(input) };
-    }
-
-    return { valid: true, value: input };
-  }
+  return { valid: true };
+}
 
   sanitizeObject(obj) {
     if (obj === null || obj === undefined) return obj;
