@@ -8,6 +8,7 @@ const path = require('path');
 const fs = require('fs'); 
 
 const query = util.promisify(db.query).bind(db);
+const queueService = require('../../queue/services/queueService');
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
@@ -50,9 +51,6 @@ function verificarAutenticacao(req, res, next) {
     next();
 }
 
-// ======================
-// Rota principal - Lista de vendas/pedidos
-// ======================
 router.get('/', verificarAutenticacao, async (req, res) => {
     try {
         const { busca } = req.query;
@@ -63,7 +61,6 @@ router.get('/', verificarAutenticacao, async (req, res) => {
         console.log('Session tipo_acesso:', req.session.tipo_acesso);
         console.log('===================');
 
-        // Query para listar pedidos
         let sqlQuery = `
             SELECT 
                 p.id,
@@ -81,7 +78,6 @@ router.get('/', verificarAutenticacao, async (req, res) => {
 
         const params = [];
 
-        // Filtro de busca
         if (busca && busca.trim() !== '') {
             sqlQuery += ` AND (
                 p.order_id LIKE ? OR 
@@ -117,10 +113,6 @@ router.get('/', verificarAutenticacao, async (req, res) => {
     }
 });
 
-
-// ======================
-// Rota para criar novo pedido
-// ======================
 router.post('/novo', verificarAutenticacao, async (req, res) => {
     try {
         const {
@@ -142,7 +134,6 @@ router.post('/novo', verificarAutenticacao, async (req, res) => {
 
         console.log('Criando novo pedido:', { order_id, customer_name, source });
 
-        // Buscar ID do usuário
         const usuarios = await query('SELECT id FROM usuarios WHERE nome = ?', [req.session.nome]);
         const usuarioId = usuarios.length > 0 ? usuarios[0].id : null;
 
@@ -150,13 +141,11 @@ router.post('/novo', verificarAutenticacao, async (req, res) => {
             return res.redirect('/vendas?erro=' + encodeURIComponent('Usuário não encontrado'));
         }
 
-        // Verificar se order_id já existe
         const pedidoExiste = await query('SELECT id FROM pedidos WHERE order_id = ?', [order_id]);
         if (pedidoExiste.length > 0) {
             return res.redirect('/vendas?erro=' + encodeURIComponent('Order ID já existe no sistema'));
         }
 
-        // 1. Criar ou buscar cliente
         let clienteId = null;
         
         if (cpf_cnpj && cpf_cnpj.trim() !== '') {
@@ -213,7 +202,7 @@ router.post('/novo', verificarAutenticacao, async (req, res) => {
             ]);
             
             clienteId = resultCliente.insertId;
-            console.log('✓ Novo cliente criado. ID:', clienteId);
+            console.log('Novo cliente criado. ID:', clienteId);
         }
 
         if (cep && logradouro && cidade && estado) {
@@ -303,7 +292,29 @@ router.post('/novo', verificarAutenticacao, async (req, res) => {
             pedidoId
         ]);
 
-        console.log('✓ Pedido criado com sucesso! ID:', pedidoId);
+        console.log('Pedido criado com sucesso! ID:', pedidoId);
+        
+        queueService.addTask({
+            tipo: 'embalagem',
+            descricao: `Embalar pedido #${order_id.toUpperCase()} - Cliente: ${customer_name}`,
+            dados: {
+                pedido_id: pedidoId,
+                order_id: order_id.toUpperCase(),
+                cliente: customer_name,
+                origem: sourceFormatado,
+                cpf_cnpj: cpf_cnpj || null,
+                telefone: telefone || null
+            },
+            prioridade: 'alta',
+            usuario_id: usuarioId
+        }, (error) => {
+            if (error) {
+                console.error('Erro ao adicionar na fila:', error);
+            }
+        });
+
+        console.log('Pedido adicionado na fila de embalagem');
+        
         res.redirect(`/vendas/detalhes/${pedidoId}?success=1`);
 
     } catch (error) {
@@ -312,10 +323,6 @@ router.post('/novo', verificarAutenticacao, async (req, res) => {
     }
 });
 
-
-// ======================
-// Rota para detalhes do pedido
-// ======================
 router.get('/detalhes/:id', verificarAutenticacao, async (req, res) => {
     try {
         const pedidoId = req.params.id;
@@ -415,14 +422,11 @@ router.get('/detalhes/:id', verificarAutenticacao, async (req, res) => {
     }
 });
 
-
-// Rota para atualizar status do pedido
 router.post('/detalhes/:id/status', verificarAutenticacao, async (req, res) => {
     try {
         const pedidoId = req.params.id;
         const { novoStatus, observacoes } = req.body;
 
-        // Buscar ID do usuário logado
         const usuarios = await query('SELECT id FROM usuarios WHERE nome = ?', [req.session.nome]);
         const usuarioId = usuarios.length > 0 ? usuarios[0].id : null;
 
@@ -430,13 +434,11 @@ router.post('/detalhes/:id/status', verificarAutenticacao, async (req, res) => {
             return res.status(401).json({ erro: 'Usuário não encontrado' });
         }
 
-        // Validar status
         const statusValidos = ['Pendente', 'Em_Separacao', 'Empacotado', 'Erro', 'Cancelado'];
         if (!statusValidos.includes(novoStatus)) {
             return res.status(400).json({ erro: 'Status inválido' });
         }
 
-        // Atualizar pedido
         let updateQuery = 'UPDATE pedidos SET status = ?, observacoes = ?';
         let updateParams = [novoStatus, observacoes || null];
 
@@ -450,7 +452,6 @@ router.post('/detalhes/:id/status', verificarAutenticacao, async (req, res) => {
 
         await query(updateQuery, updateParams);
 
-        // Registrar auditoria
         await query(`
             INSERT INTO auditoria_sistema (usuario_id, acao, descricao, tabela_afetada, registro_id)
             VALUES (?, 'ATUALIZAR_STATUS', ?, 'pedidos', ?)
@@ -468,7 +469,6 @@ router.post('/detalhes/:id/status', verificarAutenticacao, async (req, res) => {
     }
 });
 
-// Rota para registrar escaneamento
 router.post('/detalhes/:id/escanear', verificarAutenticacao, async (req, res) => {
     try {
         const pedidoId = req.params.id;
@@ -530,7 +530,6 @@ router.post('/upload-imagem/:id', verificarAutenticacao, upload.single('imagem')
         const pedidoId = req.params.id;
         const observacoes = req.body.observacoes || '';
         
-        // Buscar ID do usuário
         const usuarios = await query('SELECT id FROM usuarios WHERE nome = ?', [req.session.nome]);
         const usuarioId = usuarios.length > 0 ? usuarios[0].id : null;
         
@@ -544,7 +543,6 @@ router.post('/upload-imagem/:id', verificarAutenticacao, upload.single('imagem')
         
         const imagePath = `/provas_embalagem/${req.file.filename}`;
         
-        // Verificar se já existe prova
         const provasExistentes = await query(
             'SELECT id FROM provas_embalagem WHERE pedido_id = ?',
             [pedidoId]
@@ -563,7 +561,6 @@ router.post('/upload-imagem/:id', verificarAutenticacao, upload.single('imagem')
             `, [pedidoId, imagePath, usuarioId, observacoes]);
         }
         
-        // Atualizar pedido para Empacotado
         await query(`
             UPDATE pedidos 
             SET status = 'Empacotado', 
@@ -572,13 +569,12 @@ router.post('/upload-imagem/:id', verificarAutenticacao, upload.single('imagem')
             WHERE id = ?
         `, [usuarioId, pedidoId]);
         
-        // Auditoria
         await query(`
             INSERT INTO auditoria_sistema (usuario_id, acao, descricao, tabela_afetada, registro_id)
             VALUES (?, 'UPLOAD_PROVA', ?, 'provas_embalagem', ?)
         `, [usuarioId, 'Prova de embalagem enviada', pedidoId]);
         
-        console.log('✓ Prova salva com sucesso!');
+        console.log('Prova salva com sucesso!');
         res.redirect('/vendas?sucesso=Prova enviada com sucesso!');
         
     } catch (error) {
@@ -595,13 +591,10 @@ router.post('/upload-imagem/:id', verificarAutenticacao, upload.single('imagem')
     }
 });
 
-
-// Rota para galeria de imagens do pedido
 router.get('/galeria/:id', verificarAutenticacao, async (req, res) => {
     try {
         const pedidoId = req.params.id;
         
-        // Buscar dados do pedido
         const pedidos = await query('SELECT * FROM pedidos WHERE id = ?', [pedidoId]);
         
         if (pedidos.length === 0) {
@@ -610,7 +603,6 @@ router.get('/galeria/:id', verificarAutenticacao, async (req, res) => {
         
         const pedido = pedidos[0];
         
-        // Buscar todas as provas de embalagem deste pedido
         const provas = await query(`
             SELECT 
                 pe.*,
