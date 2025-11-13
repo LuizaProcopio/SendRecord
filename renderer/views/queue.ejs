@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %> - SendRecord</title>
+    <link rel="stylesheet" href="/css/queue.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="header-content">
+                <h1><i class="fas fa-layer-group"></i> Gerenciamento de Fila</h1>
+                <div class="user-info">
+                    <span><i class="fas fa-user"></i> <%= user.nome %></span>
+                    <span class="badge <%= user.role %>"><%= user.role %></span>
+                </div>
+            </div>
+        </header>
+
+        <section class="stats-section">
+            <div class="stat-card">
+                <div class="stat-icon" style="background: #3498db;">
+                    <i class="fas fa-list"></i>
+                </div>
+                <div class="stat-info">
+                    <h3 id="stat-total">0</h3>
+                    <p>Total de Tarefas</p>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon" style="background: #f39c12;">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stat-info">
+                    <h3 id="stat-pendentes">0</h3>
+                    <p>Pendentes</p>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon" style="background: #9b59b6;">
+                    <i class="fas fa-spinner"></i>
+                </div>
+                <div class="stat-info">
+                    <h3 id="stat-processando">0</h3>
+                    <p>Processando</p>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon" style="background: #2ecc71;">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="stat-info">
+                    <h3 id="stat-concluidas">0</h3>
+                    <p>Concluídas</p>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon" style="background: #e74c3c;">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div class="stat-info">
+                    <h3 id="stat-erros">0</h3>
+                    <p>Erros</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="actions-section">
+            <button class="btn btn-primary" onclick="openAddTaskModal()">
+                <i class="fas fa-plus"></i> Nova Tarefa
+            </button>
+
+            <% if (user.role === 'gerente') { %>
+            <button class="btn btn-success" onclick="processNext()">
+                <i class="fas fa-play"></i> Processar Próxima
+            </button>
+
+            <button class="btn btn-warning" onclick="processAll()">
+                <i class="fas fa-forward"></i> Processar Todas
+            </button>
+
+            <button class="btn btn-danger" onclick="clearQueue()">
+                <i class="fas fa-trash"></i> Limpar Fila
+            </button>
+            <% } %>
+
+            <button class="btn btn-info" onclick="loadHistory()">
+                <i class="fas fa-history"></i> Histórico
+            </button>
+
+            <button class="btn btn-secondary" onclick="addTestTasks()">
+                <i class="fas fa-flask"></i> Adicionar Testes
+            </button>
+        </section>
+
+        <section class="queue-section">
+            <div class="section-header">
+                <h2><i class="fas fa-list-ol"></i> Fila Atual</h2>
+                <button class="btn-refresh" onclick="loadQueueInfo()">
+                    <i class="fas fa-sync-alt"></i> Atualizar
+                </button>
+            </div>
+            <div id="queue-container" class="queue-container"></div>
+        </section>
+
+        <section class="history-section" id="history-section" style="display: none;">
+            <div class="section-header">
+                <h2><i class="fas fa-history"></i> Histórico de Tarefas</h2>
+                <button class="btn-close" onclick="closeHistory()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="history-filters">
+                <select id="filter-tipo" onchange="loadHistory()">
+                    <option value="">Todos os Tipos</option>
+                    <option value="documento">Documentos</option>
+                    <option value="tarefa">Tarefas</option>
+                    <option value="auditoria">Auditoria</option>
+                </select>
+                <input type="date" id="filter-data-inicio" onchange="loadHistory()">
+                <input type="date" id="filter-data-fim" onchange="loadHistory()">
+            </div>
+
+            <div id="history-container" class="history-container"></div>
+        </section>
+    </div>
+
+    <div id="addTaskModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-plus-circle"></i> Nova Tarefa</h2>
+                <button class="btn-close" onclick="closeAddTaskModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <form id="addTaskForm" onsubmit="addTask(event)">
+                <div class="form-group">
+                    <label for="task-tipo"><i class="fas fa-tag"></i> Tipo de Tarefa *</label>
+                    <select id="task-tipo" required>
+                        <option value="">Selecione...</option>
+                        <option value="documento">Documento</option>
+                        <option value="tarefa">Tarefa</option>
+                        <option value="auditoria">Auditoria</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="task-descricao"><i class="fas fa-align-left"></i> Descrição *</label>
+                    <textarea id="task-descricao" rows="3" required placeholder="Descreva a tarefa..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="task-prioridade"><i class="fas fa-flag"></i> Prioridade</label>
+                    <select id="task-prioridade">
+                        <option value="baixa">Baixa</option>
+                        <option value="media" selected>Média</option>
+                        <option value="alta">Alta</option>
+                    </select>
+                </div>
+
+                <div id="dynamic-fields"></div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeAddTaskModal()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Adicionar à Fila
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="loading-overlay" class="loading-overlay" style="display: none;">
+        <div class="spinner"></div>
+        <p>Processando...</p>
+    </div>
+
+    <script src="/js/queue.js"></script>
+</body>
+</html>
