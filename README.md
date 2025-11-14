@@ -110,7 +110,7 @@ A aplicação Electron será iniciada automaticamente e o servidor estará rodan
 
 ## 👨‍💻 Desenvolvido por
 
-Este projeto foi desenvolvido como parte dos módulos de **Desenvolvimento de Software Corporativo**, do curso de Análise e Desenvolvimento de Sistemas e **Ciência da computação** da UNIFEOB.
+Este projeto foi desenvolvido como parte dos módulos de **Desenvolvimento de Software Corporativo**, dos cursos de **Análise e Desenvolvimento de Sistemas** e **Ciência da computação** da UNIFEOB.
 
 ### Equipe de Desenvolvimento
 
