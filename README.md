@@ -77,10 +77,6 @@ DB_USER=root
 DB_PASSWORD=sua_senha
 DB_NAME=banco_pi
 DB_PORT=3306
-
-# Servidor
-PORT=4040
-NODE_ENV=development
 ```
 
 ### 5. Crie o banco de dados
