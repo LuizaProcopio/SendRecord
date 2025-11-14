@@ -14,7 +14,9 @@ const securityAuditRoutes = require('./routers/securityAudit');
 const authRouter = require('./routers/auth');
 const homeRouter = require('./routers/home');
 const vendasRouter = require('./routers/vendas');
+const relatoriosRouter = require('./routers/relatorios');
 const configRouter = require('./routers/config');
+
 const app = express();
 const PORT = 4040;
 
@@ -45,16 +47,23 @@ const conexao = require('./db');
 
 app.use(async (req, res, next) => {
   let token = req.headers['authorization']?.replace('Bearer ', '');
+
   if (!token && req.session && req.session.usuario) {
     const userName = req.session.usuario.nome || req.session.usuario.usuario || req.session.usuario.name;
+
     if (userName && !req.session.usuario.id) {
       try {
         const [usuarios] = await new Promise((resolve, reject) => {
-          conexao.query('SELECT id FROM usuarios WHERE nome = ? LIMIT 1', [userName], (error, results) => {
-            if (error) reject(error);
-            else resolve([results]);
-          });
+          conexao.query(
+            'SELECT id FROM usuarios WHERE nome = ? LIMIT 1',
+            [userName],
+            (error, results) => {
+              if (error) reject(error);
+              else resolve([results]);
+            }
+          );
         });
+
         if (usuarios && usuarios.length > 0) {
           const userId = usuarios[0].id;
           req.session.usuario.id = userId;
@@ -64,7 +73,6 @@ app.use(async (req, res, next) => {
             email: req.session.usuario.email || userName,
             tipoAcesso: req.session.usuario.tipo_acesso
           };
-          console.log('ID encontrado no banco e adicionado:', userId);
         }
       } catch (error) {
         console.error('Erro ao buscar ID do usuário:', error);
@@ -76,7 +84,6 @@ app.use(async (req, res, next) => {
         email: req.session.usuario.email || userName,
         tipoAcesso: req.session.usuario.tipo_acesso
       };
-      console.log('Usuário capturado da sessão:', req.usuarioLogado);
     }
   } else if (token) {
     const validation = auth.validateSession(token);
@@ -87,9 +94,9 @@ app.use(async (req, res, next) => {
         email: validation.session.email,
         tipoAcesso: validation.session.tipoAcesso
       };
-      console.log('Usuário capturado do token:', req.usuarioLogado);
     }
   }
+
   next();
 });
 
@@ -121,7 +128,11 @@ app.use((req, res, next) => {
 });
 
 app.get('/health', (req, res) => {
-  res.json({ status: 'OK', timestamp: new Date().toISOString(), activeSessions: auth.activeSessions.size });
+  res.json({
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    activeSessions: auth.activeSessions.size
+  });
 });
 
 app.use('/api/security/auth', securityAuthRoutes(auth, validator));
@@ -131,6 +142,7 @@ app.use('/', authRouter);
 app.use('/home', homeRouter);
 app.use('/vendas', vendasRouter);
 app.use('/config', configRouter);
+app.use('/relatorios', relatoriosRouter);
 
 app.use((req, res) => {
   if (req.path.startsWith('/api/')) {
@@ -141,6 +153,9 @@ app.use((req, res) => {
 
 app.use((err, req, res, next) => {
   Logger.erro('Erro no servidor', err);
+  console.error('Erro capturado:', err);
+  console.error('Stack:', err.stack);
+
   if (req.path.startsWith('/api/')) {
     return res.status(500).json({
       success: false,
@@ -148,6 +163,7 @@ app.use((err, req, res, next) => {
       error: process.env.NODE_ENV === 'development' ? err.message : undefined
     });
   }
+
   res.status(500).send('Erro interno do servidor');
 });
 

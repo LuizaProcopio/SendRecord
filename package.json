@@ -12,6 +12,8 @@
   "description": "Aplicação desktop feita com **Electron** e **Node.js**, conectada a banco de dados MySQL.  \r Entrega inicial com login, dashboard e navegação básica.",
   "dependencies": {
     "bcrypt": "^6.0.0",
+    "chart.js": "^4.5.1",
+    "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "ejs": "^3.1.10",
     "electron-builder": "^26.0.12",
