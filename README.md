@@ -57,15 +57,18 @@ O projeto contempla controle hierárquico de acesso (RBAC) com 4 níveis de usu�
 git clone https://github.com/LuizaProcopio/SendRecord.git
 cd SendRecord
 ```
-
-### 2. Instale as dependências
+### 2. Abrir a pasta no VSCode
+```bash
+SendRecord
+```
+### 3. Instale as dependências
 ```bash
 npm install express mysql2 ejs express-session dotenv multer bcrypt cors
 npm install electron --save-dev
 npm install electron-builder --save
 ```
 
-### 3. Configure o `.env`
+### 4. Configure o `.env`
 Crie um arquivo `.env` na raiz do projeto:
 ```env
 # Banco de Dados
@@ -80,7 +83,7 @@ PORT=4040
 NODE_ENV=development
 ```
 
-### 4. Crie o banco de dados
+### 5. Crie o banco de dados
 ```bash
 create database banco_pi
 ```
@@ -93,7 +96,7 @@ mysql -u root -p < banco_pi.sql
 Ou via MySQL Workbench:
 - File → Run SQL Script → Selecione `banco_pi.sql`
 
-### 5. Inicie a aplicação
+### 6. Inicie a aplicação
 ```bash
 npm start
 ```
