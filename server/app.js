@@ -14,6 +14,7 @@ const securityAuditRoutes = require('./routers/securityAudit');
 const authRouter = require('./routers/auth');
 const homeRouter = require('./routers/home');
 const vendasRouter = require('./routers/vendas');
+const relatoriosRouter = require('./routers/relatorios');
 const configRouter = require('./routers/config');
 const app = express();
 const PORT = 4040;
@@ -131,6 +132,7 @@ app.use('/', authRouter);
 app.use('/home', homeRouter);
 app.use('/vendas', vendasRouter);
 app.use('/config', configRouter);
+app.use('/relatorios', relatoriosRouter);
 
 app.use((req, res) => {
   if (req.path.startsWith('/api/')) {
@@ -141,6 +143,8 @@ app.use((req, res) => {
 
 app.use((err, req, res, next) => {
   Logger.erro('Erro no servidor', err);
+  console.error('❌❌❌ ERRO CAPTURADO:', err); // ← ADICIONE
+  console.error('Stack completo:', err.stack); // ← ADICIONE
   if (req.path.startsWith('/api/')) {
     return res.status(500).json({
       success: false,
