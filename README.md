@@ -1,5 +1,4 @@
 # SendRecord - Sistema de Gestão de Pedidos Mount Vernon
-Sistema desktop de gestão de pedidos e empacotamento com módulos completos de Segurança, Auditoria e Estrutura de Dados
 
 ## 📘 Sobre o Projeto
 O **SendRecord** é uma aplicação desktop desenvolvida com **Electron** e **Node.js** para gerenciar pedidos e controlar o empacotamento de camisas da Mount Vernon. O sistema integra funcionalidades de vendas, estoque, clientes, um **módulo robusto de Segurança e Auditoria** que garante rastreabilidade total de todas as ações realizadas e implementação de **Estruturas de Dados** para otimização de processos críticos.
