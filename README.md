@@ -114,14 +114,9 @@ Este projeto foi desenvolvido como parte do módulo de **Desenvolvimento de Soft
 
 ### Equipe de Desenvolvimento
 
-- [Danilo Deademe Azevedo 
-   Luis Miguel Vitor
-   Maria Luiza Tavares Procopio]
-
-**Sistema Base:**
-- Luiza Procopio - Desenvolvimento da aplicação base
-- Repositório: [github.com/LuizaProcopio/SendRecord](https://github.com/LuizaProcopio/SendRecord)
-
+- Danilo Deademe Azevedo
+- Luis Miguel Vitor
+- Maria Luiza Tavares Procopio
 ---
 
 Desenvolvido com foco em **segurança**, **rastreabilidade** e **controle de acesso** no ambiente corporativo.
