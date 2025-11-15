@@ -66,6 +66,7 @@ SendRecord
 npm install express mysql2 ejs express-session dotenv multer bcrypt cors
 npm install electron --save-dev
 npm install electron-builder --save
+npm install jspdf jspdf-autotable xlsx
 ```
 
 ### 4. Configure o `.env`
@@ -92,14 +93,14 @@ mysql -u root -p < banco_pi.sql
 Ou via MySQL Workbench:
 - File → Run SQL Script → Selecione `banco_pi.sql`
 
-### 6. Inicie a aplicação
+### 6. Inicie a aplicação no terminal do VSCode
 ```bash
 npm start
 ```
 
 A aplicação Electron será iniciada automaticamente e o servidor estará rodando em `http://localhost:4040`
 
-## 🛠️ Ferramentas e Tecnologias
+## 🛠️ Ferramentas
 ![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)
 ![Express](https://img.shields.io/badge/Express-000000?style=for-the-badge&logo=express&logoColor=white)
 ![MySQL](https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white)
@@ -110,7 +111,7 @@ A aplicação Electron será iniciada automaticamente e o servidor estará rodan
 
 ## 👨‍💻 Desenvolvido por
 
-Este projeto foi desenvolvido como parte dos módulos de **Desenvolvimento de Software Corporativo**, do curso de Análise e Desenvolvimento de Sistemas e **Ciência da computação** da UNIFEOB.
+Este projeto foi desenvolvido como parte dos módulos de **Desenvolvimento de Software Corporativo**, dos cursos de **Análise e Desenvolvimento de Sistemas** e **Ciência da computação** da UNIFEOB.
 
 ### Equipe de Desenvolvimento
 
@@ -119,5 +120,3 @@ Este projeto foi desenvolvido como parte dos módulos de **Desenvolvimento de So
 - Maria Luiza Tavares Procopio
 
 ---
-
-Desenvolvido com foco em **segurança**, **rastreabilidade**, **controle de acesso**, **eficiência algorítmica** e **análise de dados** no ambiente corporativo.
