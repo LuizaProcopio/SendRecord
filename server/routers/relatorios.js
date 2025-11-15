@@ -4,21 +4,21 @@ const db = require('../db');
 
 // Middleware de autenticação
 function verificarAutenticacao(req, res, next) {
-    console.log('🔍 Verificando autenticação...');
+    console.log('Verificando autenticação...');
     console.log('Sessão:', req.session);
     
     if (req.session && req.session.usuario) {
-        console.log('✅ Usuário autenticado!');
+        console.log('Usuário autenticado!');
         next();
     } else {
-        console.log('❌ Usuário NÃO autenticado! Redirecionando...');
+        console.log('Usuário NÃO autenticado! Redirecionando...');
         res.redirect('/login');
     }
 }
 
 // Rota para renderizar a página de relatórios
 router.get('/', verificarAutenticacao, (req, res) => {
-    console.log('🔥 ENTROU NA ROTA /relatorios');
+    console.log('ENTROU NA ROTA /relatorios');
     console.log('Usuário:', req.session.usuario);
     console.log('Nome:', req.session.usuario?.nome);
     console.log('Tipo Acesso:', req.session.usuario?.tipo_acesso);
@@ -31,18 +31,19 @@ router.get('/', verificarAutenticacao, (req, res) => {
             title: 'Relatórios e Gráficos'
         };
         
-        console.log('📦 Dados para renderizar:', dados);
+        console.log('Dados para renderizar:', dados);
         
         res.render('relatorios', dados);
         
-        console.log('✅ Página renderizada com sucesso!');
+        console.log('Página renderizada com sucesso!');
     } catch (error) {
-        console.error('❌ ERRO AO RENDERIZAR:', error);
+        console.error('ERRO AO RENDERIZAR:', error);
         console.error('Stack:', error.stack);
         res.status(500).send('Erro ao carregar página de relatórios: ' + error.message);
     }
 });
 
+// Rota para buscar dados dos PEDIDOS
 // Rota para buscar dados dos PEDIDOS
 router.get('/dados', verificarAutenticacao, (req, res) => {
     try {
@@ -51,12 +52,6 @@ router.get('/dados', verificarAutenticacao, (req, res) => {
                 p.id,
                 p.order_id as descricao,
                 p.status,
-                CASE 
-                    WHEN p.source = 'Manual' THEN 'baixa'
-                    WHEN p.source = 'Wix' THEN 'media'
-                    WHEN p.source = 'Mercado_Livre' THEN 'alta'
-                    ELSE 'media'
-                END as prioridade,
                 p.created_at,
                 p.packed_at as data_processamento,
                 p.source as tipo,
@@ -64,7 +59,8 @@ router.get('/dados', verificarAutenticacao, (req, res) => {
                     'cliente', p.customer_name,
                     'valor_total', p.valor_total,
                     'item_count', p.item_count
-                ) as dados
+                ) as dados,
+                DATEDIFF(NOW(), p.created_at) as dias_pendente
             FROM pedidos p
             ORDER BY p.created_at DESC
             LIMIT 1000
@@ -80,13 +76,24 @@ router.get('/dados', verificarAutenticacao, (req, res) => {
                 });
             }
             
-            // Mapear status dos pedidos para o formato esperado
-            const dadosFormatados = rows.map(row => ({
-                ...row,
-                status: row.status === 'Pendente' ? 'pendente' : 
-                        row.status === 'Empacotado' ? 'processada' : 
-                        row.status === 'Erro' ? 'erro' : 'pendente'
-            }));
+            // Mapear status e calcular prioridade por tempo
+            const dadosFormatados = rows.map(row => {
+                // Calcular prioridade baseada nos dias pendentes
+                let prioridade = 'baixa';
+                if (row.dias_pendente >= 3) {
+                    prioridade = 'alta';
+                } else if (row.dias_pendente >= 1) {
+                    prioridade = 'media';
+                }
+                
+                return {
+                    ...row,
+                    status: row.status === 'Pendente' ? 'pendente' : 
+                            row.status === 'Empacotado' ? 'processada' : 
+                            row.status === 'Em_Separacao' ? 'pendente' : 'pendente',
+                    prioridade: prioridade
+                };
+            });
             
             res.json({
                 success: true,
@@ -102,7 +109,6 @@ router.get('/dados', verificarAutenticacao, (req, res) => {
         });
     }
 });
-
 // Rota para buscar detalhes de um pedido específico
 router.get('/detalhes/:id', verificarAutenticacao, (req, res) => {
     try {
