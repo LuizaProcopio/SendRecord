@@ -120,5 +120,3 @@ Este projeto foi desenvolvido como parte dos módulos de **Desenvolvimento de So
 - Maria Luiza Tavares Procopio
 
 ---
-
-Desenvolvido com foco em **segurança**, **rastreabilidade**, **controle de acesso**, **eficiência algorítmica** e **análise de dados** no ambiente corporativo.
