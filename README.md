@@ -93,7 +93,7 @@ mysql -u root -p < banco_pi.sql
 Ou via MySQL Workbench:
 - File → Run SQL Script → Selecione `banco_pi.sql`
 
-### 6. Inicie a aplicação
+### 6. Inicie a aplicação no terminal do VSCode
 ```bash
 npm start
 ```
