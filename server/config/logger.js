@@ -39,6 +39,7 @@ class Logger {
   static salvarAuditoria(opcoes) {
     const {
       usuarioId,
+      usuarioNome = 'System',
       acao,
       descricao,
       tabela = null,
@@ -50,13 +51,14 @@ class Logger {
 
     const query = `
       INSERT INTO auditoria_sistema 
-      (usuario_id, acao, descricao, tabela_afetada, registro_id,
+      (usuario_id, usuario_nome, acao, descricao, tabela_afetada, registro_id,
        ip_address, dados_anteriores, dados_novos, data_hora)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
     `;
 
     conexao.query(query, [
       usuarioId,
+      usuarioNome,
       acao,
       descricao,
       tabela,
@@ -68,7 +70,7 @@ class Logger {
       if (error) {
         console.error('Erro ao salvar auditoria:', error.message);
       } else {
-        console.log('Auditoria salva:', { usuario: usuarioId, acao, descricao });
+        console.log('Auditoria salva:', { usuario: usuarioNome, acao, descricao });
       }
     });
   }
@@ -85,6 +87,7 @@ class Logger {
 
     this.salvarAuditoria({
       usuarioId,
+      usuarioNome,
       acao: 'LOGIN',
       descricao: `Usuário ${usuarioNome} fez login`,
       ip
@@ -103,6 +106,7 @@ class Logger {
 
     this.salvarAuditoria({
       usuarioId,
+      usuarioNome,
       acao: 'LOGOUT',
       descricao: `Usuário ${usuarioNome} fez logout`,
       ip
@@ -119,9 +123,22 @@ class Logger {
   }
 
   static api(metodo, caminho, usuarioId, usuarioNome, ip) {
+    let nomeUsuario = 'Anônimo';
+    
+    if (usuarioNome) {
+      if (typeof usuarioNome === 'string') {
+        nomeUsuario = usuarioNome;
+      } else if (typeof usuarioNome === 'object') {
+        nomeUsuario = usuarioNome.nome || 
+                      usuarioNome.usuario || 
+                      usuarioNome.email || 
+                      'Anônimo';
+      }
+    }
+
     this.salvarLog({
       usuarioId,
-      usuarioNome: usuarioNome || 'Anônimo',
+      usuarioNome: nomeUsuario,
       acao: 'SELECT',
       descricao: `${metodo} ${caminho}`,
       ip
@@ -129,16 +146,31 @@ class Logger {
   }
 
   static success(message) {
-    console.log(message);
+    console.log('✔', message);
   }
 
   static error(message, erro) {
-    console.error(message);
-    if (erro) console.error(erro);
+    console.error('✗', message);
+    if (erro) {
+      console.error('Detalhes do erro:', erro);
+    }
   }
 
   static info(message) {
-    console.log(message);
+    console.log('ℹ', message);
+  }
+
+  static warn(message) {
+    console.warn('⚠', message);
+  }
+
+  static debug(message, data) {
+    if (process.env.NODE_ENV === 'development' || process.env.DEBUG) {
+      console.log('🔍 DEBUG:', message);
+      if (data) {
+        console.log(data);
+      }
+    }
   }
 }
 

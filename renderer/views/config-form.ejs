@@ -23,7 +23,7 @@
     <main class="container">
         <% if (tipo_acesso !== 'admin' && tipo_acesso !== 'gerente') { %>
             <div class="error-message" style="max-width: 800px; margin: 40px auto;">
-                <h2 style="margin-bottom: 10px;">⛔ Acesso Negado</h2>
+                <h2 style="margin-bottom: 10px;">Acesso Negado</h2>
                 <p>Você não tem permissão para acessar esta página.</p>
                 <p>Apenas <strong>Administradores</strong> e <strong>Gerentes</strong> podem gerenciar usuários.</p>
                 <a href="/config" class="back-button" style="margin-top: 20px; display: inline-flex;">
@@ -105,6 +105,12 @@
                                 <option value="">Selecione...</option>
                                 <option value="admin" <%= acao === 'editar' && usuarioEdit && usuarioEdit.tipo_acesso === 'admin' ? 'selected' : '' %>>
                                     Administrador
+                                </option>
+                                <option value="gerente" <%= acao === 'editar' && usuarioEdit && usuarioEdit.tipo_acesso === 'gerente' ? 'selected' : '' %>>
+                                    Gerente
+                                </option>
+                                <option value="supervisor" <%= acao === 'editar' && usuarioEdit && usuarioEdit.tipo_acesso === 'supervisor' ? 'selected' : '' %>>
+                                    Supervisor
                                 </option>
                                 <option value="operador" <%= acao === 'editar' && usuarioEdit && usuarioEdit.tipo_acesso === 'operador' ? 'selected' : '' %>>
                                     Operador

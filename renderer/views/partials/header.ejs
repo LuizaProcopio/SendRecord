@@ -20,8 +20,11 @@
         <a href="/home" class="nav-item <%= currentPage === 'home' ? 'active' : '' %>">Home</a>
         <a href="/vendas" class="nav-item <%= currentPage === 'vendas' ? 'active' : '' %>">Vendas</a>
 
-        <% if (tipo_acesso && tipo_acesso === 'admin') { %>
+        <% if (tipo_acesso && (tipo_acesso === 'admin' || tipo_acesso === 'gerente' || tipo_acesso === 'supervisor')) { %>
             <a href="/relatorios" class="nav-item <%= currentPage === 'relatorios' ? 'active' : '' %>">Relatórios</a>
+        <% } %>
+
+        <% if (tipo_acesso && (tipo_acesso === 'admin' || tipo_acesso === 'gerente')) { %>
             <a href="/config" class="nav-item <%= currentPage === 'config' ? 'active' : '' %>">Configuração</a>
         <% } %>
     </nav>
