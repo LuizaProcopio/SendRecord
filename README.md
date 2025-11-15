@@ -66,6 +66,7 @@ SendRecord
 npm install express mysql2 ejs express-session dotenv multer bcrypt cors
 npm install electron --save-dev
 npm install electron-builder --save
+npm install jspdf jspdf-autotable xlsx
 ```
 
 ### 4. Configure o `.env`
