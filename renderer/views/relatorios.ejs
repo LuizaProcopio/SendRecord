@@ -374,7 +374,19 @@
     </style>
 </head>
 <body>
-    <%- include('partials/header') %>
+
+    <header class="header">
+        <div class="logo">
+            <img src="../img/Marca.png" alt="Logo da Loja" width="300">
+        </div>
+        
+        <%- include('partials/header', { 
+            nome: nome, 
+            tipo_acesso: tipo_acesso,
+            currentPage: currentPage
+        }) %>
+
+    </header>
     
     <div class="relatorios-page">
         
@@ -437,7 +449,6 @@
                             <th>PRIORIDADE</th>
                             <th>DATA CRIAÇÃO</th>
                             <th>DATA PROCESSAMENTO</th>
-                            <th>AÇÕES</th>
                         </tr>
                     </thead>
                     <tbody id="tabelaCorpo"></tbody>
@@ -610,7 +621,6 @@
                         <td><span class="prioridade-${item.prioridade}">${{alta: 'Alta', media: 'Média', baixa: 'Baixa'}[item.prioridade] || item.prioridade}</span></td>
                         <td>${new Date(item.created_at).toLocaleString('pt-BR', {day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'})}</td>
                         <td>${item.data_processamento ? new Date(item.data_processamento).toLocaleString('pt-BR', {day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'}) : '-'}</td>
-                        <td><button class="btn-ver" onclick="verDetalhes(${item.id})"> Ver</button></td>
                     </tr>
                 `;
             });
@@ -633,69 +643,6 @@
             setTimeout(() => { btn.disabled = false; btn.textContent = '🔄 Atualizar'; }, 1000);
         }
 
-        async function verDetalhes(id) {
-            try {
-                const res = await fetch(`/relatorios/detalhes/${id}`);
-                const dados = await res.json();
-                
-                if (dados.success) {
-                    const pedido = dados.data;
-                    const statusTexto = pedido.status === 'Empacotado' ? 'Pronta' : pedido.status;
-                    
-                    document.getElementById('modalDetalhesBody').innerHTML = `
-                        <div class="detalhe-item">
-                            <div class="detalhe-label">Número do Pedido</div>
-                            <div class="detalhe-valor">${pedido.order_id}</div>
-                        </div>
-                        <div class="detalhe-item">
-                            <div class="detalhe-label">Cliente</div>
-                            <div class="detalhe-valor">${pedido.customer_name}</div>
-                        </div>
-                        <div class="detalhe-item">
-                            <div class="detalhe-label">Email</div>
-                            <div class="detalhe-valor">${pedido.cliente_email || 'Não informado'}</div>
-                        </div>
-                        <div class="detalhe-item">
-                            <div class="detalhe-label">Origem</div>
-                            <div class="detalhe-valor">${pedido.source}</div>
-                        </div>
-                        <div class="detalhe-item">
-                            <div class="detalhe-label">Status</div>
-                            <div class="detalhe-valor"><span class="status-badge status-${pedido.status === 'Empacotado' ? 'processada' : 'pendente'}">${statusTexto}</span></div>
-                        </div>
-                        <div class="detalhe-item">
-                            <div class="detalhe-label">Itens</div>
-                            <div class="detalhe-valor">${pedido.item_count || 0} itens</div>
-                        </div>
-                        <div class="detalhe-item">
-                            <div class="detalhe-label">Valor Total</div>
-                            <div class="detalhe-valor">R$ ${parseFloat(pedido.valor_total || 0).toFixed(2)}</div>
-                        </div>
-                        <div class="detalhe-item">
-                            <div class="detalhe-label">Data de Criação</div>
-                            <div class="detalhe-valor">${new Date(pedido.created_at).toLocaleString('pt-BR')}</div>
-                        </div>
-                        ${pedido.packed_at ? `
-                        <div class="detalhe-item">
-                            <div class="detalhe-label">Data de Processamento</div>
-                            <div class="detalhe-valor">${new Date(pedido.packed_at).toLocaleString('pt-BR')}</div>
-                        </div>
-                        ` : ''}
-                        ${pedido.observacoes ? `
-                        <div class="detalhe-item">
-                            <div class="detalhe-label">Observações</div>
-                            <div class="detalhe-valor">${pedido.observacoes}</div>
-                        </div>
-                        ` : ''}
-                    `;
-                    
-                    document.getElementById('modalDetalhes').style.display = 'flex';
-                }
-            } catch (error) {
-                console.error('Erro:', error);
-                alert('Erro ao carregar detalhes do pedido');
-            }
-        }
 
         function fecharModal() {
             document.getElementById('modalDetalhes').style.display = 'none';

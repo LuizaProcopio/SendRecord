@@ -109,54 +109,6 @@ router.get('/dados', verificarAutenticacao, (req, res) => {
         });
     }
 });
-// Rota para buscar detalhes de um pedido específico
-router.get('/detalhes/:id', verificarAutenticacao, (req, res) => {
-    try {
-        const { id } = req.params;
-        
-        const query = `
-            SELECT 
-                p.*,
-                c.nome as cliente_nome,
-                c.email as cliente_email,
-                u.nome as usuario_nome
-            FROM pedidos p
-            LEFT JOIN clientes c ON p.cliente_id = c.id
-            LEFT JOIN usuarios u ON p.usuario_criacao_id = u.id
-            WHERE p.id = ?
-        `;
-        
-        db.query(query, [id], (error, rows) => {
-            if (error) {
-                console.error('Erro ao buscar detalhes:', error);
-                return res.status(500).json({
-                    success: false,
-                    message: 'Erro ao buscar detalhes do pedido',
-                    error: error.message
-                });
-            }
-            
-            if (rows.length === 0) {
-                return res.status(404).json({
-                    success: false,
-                    message: 'Pedido não encontrado'
-                });
-            }
-            
-            res.json({
-                success: true,
-                data: rows[0]
-            });
-        });
-    } catch (error) {
-        console.error('Erro ao buscar detalhes:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Erro ao buscar detalhes do pedido',
-            error: error.message
-        });
-    }
-});
 
 // Rota para reprocessar um pedido com erro
 router.post('/reprocessar/:id', verificarAutenticacao, (req, res) => {
