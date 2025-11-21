@@ -63,7 +63,7 @@ SendRecord
 ```
 ### 3. Instale as dependências
 ```bash
-npm install express mysql2 ejs express-session dotenv multer bcrypt cors
+npm install express mysql2 ejs express-session dotenv multer bcryptjs cors
 npm install electron --save-dev
 npm install electron-builder --save
 npm install jspdf jspdf-autotable xlsx
