@@ -107,8 +107,26 @@ Clique em Start Import
 ```bash
 npm start
 ```
+### 7. Criação do Executável
+```bash
+npm run dist
+```
 
-A aplicação Electron será iniciada automaticamente e o servidor estará rodando em `http://localhost:4040`
+O instalador será gerado na pasta `dist/`. Basta executar o arquivo `SendRecordSetupexe` para instalar o aplicativo.
+
+A aplicação Electron será iniciada automaticamente e o servidor estará rodando.
+
+## 🔐 Usuários de Acesso (Para Testes)
+
+| Nível | Nome | Senha |
+|-------|------|-------|
+| 👨‍💼 Admin | Ana Costa | `admin123` |
+| 👔 Gerente | Carlos Silva | `gerente123` |
+| 👷 Supervisor | Fernando | `supervisor123` |
+| 🧑‍🔧 Operador | Juliana Alves | `operador123` |
+
+
+A aplicação Electron será iniciada automaticamente e o servidor estará rodando.
 
 ## 🛠️ Ferramentas
 ![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)
@@ -117,6 +135,7 @@ A aplicação Electron será iniciada automaticamente e o servidor estará rodan
 ![Electron](https://img.shields.io/badge/Electron-47848F?style=for-the-badge&logo=electron&logoColor=white)
 ![EJS](https://img.shields.io/badge/EJS-B4CA65?style=for-the-badge&logo=ejs&logoColor=black)
 ![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white)
+![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
 ![bcrypt](https://img.shields.io/badge/bcrypt-338?style=for-the-badge)
 
 ## 👨‍💻 Desenvolvido por
