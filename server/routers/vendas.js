@@ -14,10 +14,8 @@ function getUploadDir() {
     const isPackaged = process.resourcesPath && !process.resourcesPath.includes('node_modules');
     
     if (isPackaged) {
-        // Em produção: salva fora do app.asar
         return path.join(process.resourcesPath, '..', 'provas_embalagem');
     } else {
-        // Em desenvolvimento: salva na pasta do projeto
         return path.join(__dirname, '../../provas_embalagem');
     }
 }
@@ -39,6 +37,7 @@ const storage = multer.diskStorage({
         cb(null, `pedido_${pedidoId}_${timestamp}${ext}`);
     }
 });
+
 const upload = multer({
     storage: storage,
     limits: { fileSize: 5 * 1024 * 1024 },
@@ -62,15 +61,36 @@ function verificarAutenticacao(req, res, next) {
     next();
 }
 
+// Função auxiliar para obter ID do usuário logado
+async function obterUsuarioLogadoId(session) {
+    if (session.usuario_id) {
+        return session.usuario_id;
+    }
+
+    if (session.email && typeof session.email === 'string') {
+        try {
+            const result = await query('SELECT id FROM usuarios WHERE email = ? LIMIT 1', [session.email]);
+            return result.length > 0 ? result[0].id : null;
+        } catch (error) {
+            console.error('Erro ao buscar usuário por email:', error);
+        }
+    }
+
+    if (session.nome && typeof session.nome === 'string') {
+        try {
+            const result = await query('SELECT id FROM usuarios WHERE nome = ? LIMIT 1', [session.nome]);
+            return result.length > 0 ? result[0].id : null;
+        } catch (error) {
+            console.error('Erro ao buscar usuário por nome:', error);
+        }
+    }
+
+    return null;
+}
+
 router.get('/', verificarAutenticacao, async (req, res) => {
     try {
         const { busca } = req.query;
-
-        console.log('==================');
-        console.log('Session usuario:', req.session.usuario);
-        console.log('Session nome:', req.session.nome);
-        console.log('Session tipo_acesso:', req.session.tipo_acesso);
-        console.log('===================');
 
         let sqlQuery = `
             SELECT 
@@ -127,26 +147,13 @@ router.get('/', verificarAutenticacao, async (req, res) => {
 router.post('/novo', verificarAutenticacao, async (req, res) => {
     try {
         const {
-            order_id,
-            source,
-            customer_name,
-            cpf_cnpj,
-            telefone,
-            email,
-            cep,
-            logradouro,
-            numero,
-            complemento,
-            bairro,
-            cidade,
-            estado,
-            observacoes
+            order_id, source, customer_name, cpf_cnpj, telefone, email,
+            cep, logradouro, numero, complemento, bairro, cidade, estado, observacoes
         } = req.body;
 
         console.log('Criando novo pedido:', { order_id, customer_name, source });
 
-        const usuarios = await query('SELECT id FROM usuarios WHERE nome = ?', [req.session.nome]);
-        const usuarioId = usuarios.length > 0 ? usuarios[0].id : null;
+        const usuarioId = await obterUsuarioLogadoId(req.session);
 
         if (!usuarioId) {
             return res.redirect('/vendas?erro=' + encodeURIComponent('Usuário não encontrado'));
@@ -161,14 +168,10 @@ router.post('/novo', verificarAutenticacao, async (req, res) => {
         
         if (cpf_cnpj && cpf_cnpj.trim() !== '') {
             const cpfCnpjLimpo = cpf_cnpj.replace(/\D/g, '');
-            const clienteExistente = await query(
-                'SELECT id FROM clientes WHERE cpf_cnpj = ?',
-                [cpfCnpjLimpo]
-            );
+            const clienteExistente = await query('SELECT id FROM clientes WHERE cpf_cnpj = ?', [cpfCnpjLimpo]);
 
             if (clienteExistente.length > 0) {
                 clienteId = clienteExistente[0].id;
-                
                 await query(`
                     UPDATE clientes 
                     SET nome = ?, email = ?, telefone = ?, ultima_compra = CURDATE(), total_pedidos = total_pedidos + 1
@@ -178,21 +181,14 @@ router.post('/novo', verificarAutenticacao, async (req, res) => {
         }
 
         if (!clienteId) {
-            const clientePorNome = await query(
-                'SELECT id FROM clientes WHERE nome = ? LIMIT 1',
-                [customer_name]
-            );
+            const clientePorNome = await query('SELECT id FROM clientes WHERE nome = ? LIMIT 1', [customer_name]);
 
             if (clientePorNome.length > 0) {
                 clienteId = clientePorNome[0].id;
-                
                 await query(`
                     UPDATE clientes 
-                    SET email = COALESCE(?, email), 
-                        telefone = COALESCE(?, telefone),
-                        cpf_cnpj = COALESCE(?, cpf_cnpj),
-                        ultima_compra = CURDATE(),
-                        total_pedidos = total_pedidos + 1
+                    SET email = COALESCE(?, email), telefone = COALESCE(?, telefone),
+                        cpf_cnpj = COALESCE(?, cpf_cnpj), ultima_compra = CURDATE(), total_pedidos = total_pedidos + 1
                     WHERE id = ?
                 `, [email, telefone, cpf_cnpj ? cpf_cnpj.replace(/\D/g, '') : null, clienteId]);
             }
@@ -204,128 +200,73 @@ router.post('/novo', verificarAutenticacao, async (req, res) => {
             const resultCliente = await query(`
                 INSERT INTO clientes (nome, cpf_cnpj, email, telefone, tipo_cliente, ultima_compra, total_pedidos)
                 VALUES (?, ?, ?, ?, ?, CURDATE(), 1)
-            `, [
-                customer_name,
-                cpf_cnpj ? cpf_cnpj.replace(/\D/g, '') : null,
-                email || null,
-                telefone || null,
-                tipoCliente
-            ]);
+            `, [customer_name, cpf_cnpj ? cpf_cnpj.replace(/\D/g, '') : null, email || null, telefone || null, tipoCliente]);
             
             clienteId = resultCliente.insertId;
-            console.log('Novo cliente criado. ID:', clienteId);
         }
 
         if (cep && logradouro && cidade && estado) {
             const cepLimpo = cep.replace(/\D/g, '');
-            const enderecoExistente = await query(
-                'SELECT id FROM enderecos_clientes WHERE cliente_id = ? AND principal = TRUE',
-                [clienteId]
-            );
+            const enderecoExistente = await query('SELECT id FROM enderecos_clientes WHERE cliente_id = ? AND principal = TRUE', [clienteId]);
 
             if (enderecoExistente.length > 0) {
                 await query(`
                     UPDATE enderecos_clientes
-                    SET cep = ?, logradouro = ?, numero = ?, complemento = ?,
-                        bairro = ?, cidade = ?, estado = ?, tipo_endereco = 'principal'
+                    SET cep = ?, logradouro = ?, numero = ?, complemento = ?, bairro = ?, cidade = ?, estado = ?
                     WHERE id = ?
-                `, [
-                    cepLimpo,
-                    logradouro,
-                    numero || 'S/N',
-                    complemento || null,
-                    bairro || '',
-                    cidade,
-                    estado,
-                    enderecoExistente[0].id
-                ]);
+                `, [cepLimpo, logradouro, numero || 'S/N', complemento || null, bairro || '', cidade, estado, enderecoExistente[0].id]);
             } else {
                 await query(`
-                    INSERT INTO enderecos_clientes 
-                    (cliente_id, tipo_endereco, cep, logradouro, numero, complemento, bairro, cidade, estado, principal)
+                    INSERT INTO enderecos_clientes (cliente_id, tipo_endereco, cep, logradouro, numero, complemento, bairro, cidade, estado, principal)
                     VALUES (?, 'principal', ?, ?, ?, ?, ?, ?, ?, TRUE)
-                `, [
-                    clienteId,
-                    cepLimpo,
-                    logradouro,
-                    numero || 'S/N',
-                    complemento || null,
-                    bairro || '',
-                    cidade,
-                    estado
-                ]);
+                `, [clienteId, cepLimpo, logradouro, numero || 'S/N', complemento || null, bairro || '', cidade, estado]);
             }
         }
 
-        let sourceFormatado = source;
         const sourceMap = {
-            'loja_fisica': 'Manual',
-            'whatsapp': 'Manual',
-            'marketplace': 'Mercado_Livre',
-            'site': 'Wix',
-            'wix': 'Wix',
-            'mercado_livre': 'Mercado_Livre',
-            'manual': 'Manual'
+            'loja_fisica': 'Manual', 'whatsapp': 'Manual', 'marketplace': 'Mercado_Livre',
+            'site': 'Wix', 'wix': 'Wix', 'mercado_livre': 'Mercado_Livre', 'manual': 'Manual'
         };
-        
-        sourceFormatado = sourceMap[source.toLowerCase()] || 'Manual';
+        const sourceFormatado = sourceMap[source.toLowerCase()] || 'Manual';
 
         const resultPedido = await query(`
-            INSERT INTO pedidos (
-                order_id,
-                source,
-                cliente_id,
-                customer_name,
-                item_count,
-                valor_total,
-                status,
-                observacoes,
-                usuario_criacao_id,
-                created_at
-            ) VALUES (?, ?, ?, ?, 0, 0.00, 'Pendente', ?, ?, NOW())
-        `, [
-            order_id.toUpperCase(),
-            sourceFormatado,
-            clienteId,
-            customer_name,
-            observacoes || null,
-            usuarioId
-        ]);
+            INSERT INTO pedidos (order_id, source, cliente_id, customer_name, item_count, valor_total, status, observacoes, usuario_criacao_id, created_at)
+            VALUES (?, ?, ?, ?, 0, 0.00, 'Pendente', ?, ?, NOW())
+        `, [order_id.toUpperCase(), sourceFormatado, clienteId, customer_name, observacoes || null, usuarioId]);
 
         const pedidoId = resultPedido.insertId;
 
-        await query(`
-            INSERT INTO auditoria_sistema (usuario_id, acao, descricao, tabela_afetada, registro_id)
-            VALUES (?, 'CRIAR_PEDIDO', ?, 'pedidos', ?)
-        `, [
-            usuarioId,
-            `Pedido ${order_id.toUpperCase()} criado manualmente via sistema`,
-            pedidoId
-        ]);
+        // AUDITORIA COMPLETA - CRIAR PEDIDO
+        try {
+            await query(`
+                INSERT INTO auditoria_sistema 
+                (usuario_id, usuario_nome, acao, descricao, tabela_afetada, registro_id, ip_address, dados_anteriores, dados_novos)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            `, [
+                usuarioId,
+                req.session.nome,
+                'CRIAR_PEDIDO',
+                `Pedido ${order_id.toUpperCase()} criado manualmente via sistema`,
+                'pedidos',
+                pedidoId,
+                req.ip || req.connection.remoteAddress || '127.0.0.1',
+                null,
+                JSON.stringify({ order_id: order_id.toUpperCase(), customer_name, source: sourceFormatado, cliente_id: clienteId })
+            ]);
+        } catch (auditError) {
+            console.log('Aviso: Não foi possível registrar auditoria:', auditError.message);
+        }
 
-        console.log('Pedido criado com sucesso! ID:', pedidoId);
-        
         queueService.addTask({
             tipo: 'embalagem',
             descricao: `Embalar pedido #${order_id.toUpperCase()} - Cliente: ${customer_name}`,
-            dados: {
-                pedido_id: pedidoId,
-                order_id: order_id.toUpperCase(),
-                cliente: customer_name,
-                origem: sourceFormatado,
-                cpf_cnpj: cpf_cnpj || null,
-                telefone: telefone || null
-            },
+            dados: { pedido_id: pedidoId, order_id: order_id.toUpperCase(), cliente: customer_name, origem: sourceFormatado, cpf_cnpj: cpf_cnpj || null, telefone: telefone || null },
             prioridade: 'alta',
             usuario_id: usuarioId
         }, (error) => {
-            if (error) {
-                console.error('Erro ao adicionar na fila:', error);
-            }
+            if (error) console.error('Erro ao adicionar na fila:', error);
         });
 
-        console.log('Pedido adicionado na fila de embalagem');
-        
         res.redirect(`/vendas/detalhes/${pedidoId}?success=1`);
 
     } catch (error) {
@@ -338,28 +279,11 @@ router.get('/detalhes/:id', verificarAutenticacao, async (req, res) => {
     try {
         const pedidoId = req.params.id;
 
-        console.log('Buscando detalhes do pedido:', pedidoId);
-
         const pedidos = await query(`
-            SELECT 
-                p.*,
-                c.nome as cliente_nome,
-                c.cpf_cnpj,
-                c.email as cliente_email,
-                c.telefone as cliente_telefone,
-                c.tipo_cliente,
-                e.logradouro,
-                e.numero,
-                e.complemento,
-                e.bairro,
-                e.cidade,
-                e.estado,
-                e.cep,
-                u_criacao.nome as criado_por,
-                u_empacotamento.nome as empacotado_por,
-                pe.image_path as imagem_prova,
-                pe.video_path as video_prova,
-                pe.observacoes as observacoes_prova
+            SELECT p.*, c.nome as cliente_nome, c.cpf_cnpj, c.email as cliente_email, c.telefone as cliente_telefone, c.tipo_cliente,
+                e.logradouro, e.numero, e.complemento, e.bairro, e.cidade, e.estado, e.cep,
+                u_criacao.nome as criado_por, u_empacotamento.nome as empacotado_por,
+                pe.image_path as imagem_prova, pe.video_path as video_prova, pe.observacoes as observacoes_prova
             FROM pedidos p
             LEFT JOIN clientes c ON p.cliente_id = c.id
             LEFT JOIN enderecos_clientes e ON c.id = e.cliente_id AND e.principal = TRUE
@@ -374,20 +298,11 @@ router.get('/detalhes/:id', verificarAutenticacao, async (req, res) => {
         }
 
         const pedido = pedidos[0];
-
-        const provas = await query(`
-            SELECT * FROM provas_embalagem WHERE pedido_id = ?
-        `, [pedidoId]);
-
+        const provas = await query('SELECT * FROM provas_embalagem WHERE pedido_id = ?', [pedidoId]);
         const prova = provas.length > 0 ? provas[0] : null;
 
         const itens = await query(`
-            SELECT 
-                ip.*,
-                p.nome as produto_nome,
-                p.sku as produto_sku,
-                vp.cor,
-                vp.tamanho
+            SELECT ip.*, p.nome as produto_nome, p.sku as produto_sku, vp.cor, vp.tamanho
             FROM itens_pedido ip
             LEFT JOIN produtos p ON ip.produto_id = p.id
             LEFT JOIN variacoes_produto vp ON ip.variacao_id = vp.id
@@ -396,16 +311,12 @@ router.get('/detalhes/:id', verificarAutenticacao, async (req, res) => {
         `, [pedidoId]);
 
         const historico = await query(`
-            SELECT 
-                he.*,
-                u.nome as usuario_nome,
-                ip.product_name
+            SELECT he.*, u.nome as usuario_nome, ip.product_name
             FROM historico_escaneamento he
             LEFT JOIN usuarios u ON he.usuario_id = u.id
             LEFT JOIN itens_pedido ip ON he.item_pedido_id = ip.id
             WHERE he.pedido_id = ?
-            ORDER BY he.data_hora DESC
-            LIMIT 20
+            ORDER BY he.data_hora DESC LIMIT 20
         `, [pedidoId]);
 
         const totalItens = itens.reduce((sum, item) => sum + item.quantity_required, 0);
@@ -416,13 +327,7 @@ router.get('/detalhes/:id', verificarAutenticacao, async (req, res) => {
             nome: req.session.nome || req.session.usuario || 'Usuário',
             tipo_acesso: req.session.tipo_acesso || 'operador',
             currentPage: 'vendas',
-            pedido: pedido,
-            prova: prova,
-            itens: itens,
-            historico: historico,
-            progresso: progresso,
-            totalItens: totalItens,
-            itensEscaneados: itensEscaneados,
+            pedido, prova, itens, historico, progresso, totalItens, itensEscaneados,
             success: req.query.success || null,
             erro: req.query.erro || null
         });
@@ -438,8 +343,7 @@ router.post('/detalhes/:id/status', verificarAutenticacao, async (req, res) => {
         const pedidoId = req.params.id;
         const { novoStatus, observacoes } = req.body;
 
-        const usuarios = await query('SELECT id FROM usuarios WHERE nome = ?', [req.session.nome]);
-        const usuarioId = usuarios.length > 0 ? usuarios[0].id : null;
+        const usuarioId = await obterUsuarioLogadoId(req.session);
 
         if (!usuarioId) {
             return res.status(401).json({ erro: 'Usuário não encontrado' });
@@ -450,12 +354,15 @@ router.post('/detalhes/:id/status', verificarAutenticacao, async (req, res) => {
             return res.status(400).json({ erro: 'Status inválido' });
         }
 
+        // Buscar dados anteriores ANTES de atualizar
+        const dadosAnteriores = await query('SELECT status, observacoes FROM pedidos WHERE id = ?', [pedidoId]);
+
         let updateQuery = 'UPDATE pedidos SET status = ?, observacoes = ?';
         let updateParams = [novoStatus, observacoes || null];
 
         if (novoStatus === 'Empacotado') {
             updateQuery += ', usuario_empacotamento_id = ?, packed_at = NOW()';
-            updateParams.push(req.session.usuario.id);
+            updateParams.push(usuarioId);
         }
 
         updateQuery += ' WHERE id = ?';
@@ -463,14 +370,26 @@ router.post('/detalhes/:id/status', verificarAutenticacao, async (req, res) => {
 
         await query(updateQuery, updateParams);
 
-        await query(`
-            INSERT INTO auditoria_sistema (usuario_id, acao, descricao, tabela_afetada, registro_id)
-            VALUES (?, 'ATUALIZAR_STATUS', ?, 'pedidos', ?)
-        `, [
-            req.session.usuario.id,
-            `Status alterado para ${novoStatus}`,
-            pedidoId
-        ]);
+        // AUDITORIA COMPLETA - ATUALIZAR STATUS
+        try {
+            await query(`
+                INSERT INTO auditoria_sistema 
+                (usuario_id, usuario_nome, acao, descricao, tabela_afetada, registro_id, ip_address, dados_anteriores, dados_novos)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            `, [
+                usuarioId,
+                req.session.nome,
+                'ATUALIZAR_STATUS',
+                `Status alterado para ${novoStatus}`,
+                'pedidos',
+                parseInt(pedidoId),
+                req.ip || req.connection.remoteAddress || '127.0.0.1',
+                dadosAnteriores.length > 0 ? JSON.stringify(dadosAnteriores[0]) : null,
+                JSON.stringify({ status: novoStatus, observacoes: observacoes || null })
+            ]);
+        } catch (auditError) {
+            console.log('Aviso: Não foi possível registrar auditoria:', auditError.message);
+        }
 
         res.json({ sucesso: true, mensagem: 'Status atualizado com sucesso' });
 
@@ -485,10 +404,9 @@ router.post('/detalhes/:id/escanear', verificarAutenticacao, async (req, res) =>
         const pedidoId = req.params.id;
         const { barcode, itemPedidoId } = req.body;
 
-        const itens = await query(
-            'SELECT * FROM itens_pedido WHERE id = ? AND pedido_id = ?',
-            [itemPedidoId, pedidoId]
-        );
+        const usuarioId = await obterUsuarioLogadoId(req.session);
+
+        const itens = await query('SELECT * FROM itens_pedido WHERE id = ? AND pedido_id = ?', [itemPedidoId, pedidoId]);
 
         if (itens.length === 0) {
             return res.status(404).json({ erro: 'Item não encontrado' });
@@ -501,31 +419,43 @@ router.post('/detalhes/:id/escanear', verificarAutenticacao, async (req, res) =>
             const novaQuantidade = item.quantity_scanned + 1;
             const verificado = novaQuantidade >= item.quantity_required;
 
-            await query(
-                'UPDATE itens_pedido SET quantity_scanned = ?, verified = ? WHERE id = ?',
-                [novaQuantidade, verificado, itemPedidoId]
-            );
+            await query('UPDATE itens_pedido SET quantity_scanned = ?, verified = ? WHERE id = ?', [novaQuantidade, verificado, itemPedidoId]);
 
             await query(`
-                INSERT INTO historico_escaneamento 
-                (item_pedido_id, pedido_id, usuario_id, barcode_escaneado, sucesso, mensagem)
+                INSERT INTO historico_escaneamento (item_pedido_id, pedido_id, usuario_id, barcode_escaneado, sucesso, mensagem)
                 VALUES (?, ?, ?, ?, TRUE, 'Item escaneado com sucesso')
-            `, [itemPedidoId, pedidoId, req.session.usuario.id, barcode]);
+            `, [itemPedidoId, pedidoId, usuarioId, barcode]);
 
-            res.json({
-                sucesso: true,
-                mensagem: `Item escaneado (${novaQuantidade}/${item.quantity_required})`,
-                verificado: verificado
-            });
+            // AUDITORIA COMPLETA - ESCANEAR ITEM
+            try {
+                await query(`
+                    INSERT INTO auditoria_sistema 
+                    (usuario_id, usuario_nome, acao, descricao, tabela_afetada, registro_id, ip_address, dados_anteriores, dados_novos)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                `, [
+                    usuarioId,
+                    req.session.nome,
+                    'ESCANEAR_ITEM',
+                    `Item escaneado (${novaQuantidade}/${item.quantity_required})`,
+                    'itens_pedido',
+                    parseInt(itemPedidoId),
+                    req.ip || req.connection.remoteAddress || '127.0.0.1',
+                    JSON.stringify({ quantity_scanned: item.quantity_scanned, verified: item.verified }),
+                    JSON.stringify({ quantity_scanned: novaQuantidade, verified: verificado, barcode })
+                ]);
+            } catch (auditError) {
+                console.log('Aviso: Não foi possível registrar auditoria:', auditError.message);
+            }
+
+            res.json({ sucesso: true, mensagem: `Item escaneado (${novaQuantidade}/${item.quantity_required})`, verificado });
 
         } else if (item.quantity_scanned >= item.quantity_required) {
             res.status(400).json({ erro: 'Item já está completamente verificado' });
         } else {
             await query(`
-                INSERT INTO historico_escaneamento 
-                (item_pedido_id, pedido_id, usuario_id, barcode_escaneado, sucesso, mensagem)
+                INSERT INTO historico_escaneamento (item_pedido_id, pedido_id, usuario_id, barcode_escaneado, sucesso, mensagem)
                 VALUES (?, ?, ?, ?, FALSE, 'Código de barras incorreto')
-            `, [itemPedidoId, pedidoId, req.session.usuario.id, barcode]);
+            `, [itemPedidoId, pedidoId, usuarioId, barcode]);
 
             res.status(400).json({ erro: 'Código de barras incorreto' });
         }
@@ -541,8 +471,7 @@ router.post('/upload-imagem/:id', verificarAutenticacao, upload.single('imagem')
         const pedidoId = req.params.id;
         const observacoes = req.body.observacoes || '';
         
-        const usuarios = await query('SELECT id FROM usuarios WHERE nome = ?', [req.session.nome]);
-        const usuarioId = usuarios.length > 0 ? usuarios[0].id : null;
+        const usuarioId = await obterUsuarioLogadoId(req.session);
         
         if (!usuarioId) {
             return res.status(401).json({ erro: 'Usuário não encontrado' });
@@ -553,37 +482,74 @@ router.post('/upload-imagem/:id', verificarAutenticacao, upload.single('imagem')
         }
         
         const imagePath = `/provas_embalagem/${req.file.filename}`;
+
+        // Buscar dados anteriores do pedido ANTES de atualizar
+        const dadosAnteriores = await query('SELECT status, usuario_empacotamento_id FROM pedidos WHERE id = ?', [pedidoId]);
         
-        const provasExistentes = await query(
-            'SELECT id FROM provas_embalagem WHERE pedido_id = ?',
-            [pedidoId]
-        );
+        const provasExistentes = await query('SELECT id, image_path FROM provas_embalagem WHERE pedido_id = ?', [pedidoId]);
         
+        let provaId = null;
+        let imagemAnterior = null;
+
         if (provasExistentes.length > 0) {
+            provaId = provasExistentes[0].id;
+            imagemAnterior = provasExistentes[0].image_path;
+
             await query(`
-                UPDATE provas_embalagem 
-                SET image_path = ?, observacoes = ?, usuario_id = ?, created_at = NOW()
-                WHERE pedido_id = ?
+                UPDATE provas_embalagem SET image_path = ?, observacoes = ?, usuario_id = ?, created_at = NOW() WHERE pedido_id = ?
             `, [imagePath, observacoes, usuarioId, pedidoId]);
         } else {
-            await query(`
-                INSERT INTO provas_embalagem (pedido_id, image_path, usuario_id, observacoes)
-                VALUES (?, ?, ?, ?)
+            const resultProva = await query(`
+                INSERT INTO provas_embalagem (pedido_id, image_path, usuario_id, observacoes) VALUES (?, ?, ?, ?)
             `, [pedidoId, imagePath, usuarioId, observacoes]);
+            provaId = resultProva.insertId;
         }
         
         await query(`
-            UPDATE pedidos 
-            SET status = 'Empacotado', 
-                usuario_empacotamento_id = ?, 
-                packed_at = NOW()
-            WHERE id = ?
+            UPDATE pedidos SET status = 'Empacotado', usuario_empacotamento_id = ?, packed_at = NOW() WHERE id = ?
         `, [usuarioId, pedidoId]);
         
-        await query(`
-            INSERT INTO auditoria_sistema (usuario_id, acao, descricao, tabela_afetada, registro_id)
-            VALUES (?, 'UPLOAD_PROVA', ?, 'provas_embalagem', ?)
-        `, [usuarioId, 'Prova de embalagem enviada', pedidoId]);
+        // AUDITORIA COMPLETA - UPLOAD PROVA
+        try {
+            await query(`
+                INSERT INTO auditoria_sistema 
+                (usuario_id, usuario_nome, acao, descricao, tabela_afetada, registro_id, ip_address, dados_anteriores, dados_novos)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            `, [
+                usuarioId,
+                req.session.nome,
+                'UPLOAD_PROVA',
+                `Prova de embalagem enviada para pedido #${pedidoId}`,
+                'provas_embalagem',
+                provaId,
+                req.ip || req.connection.remoteAddress || '127.0.0.1',
+                imagemAnterior ? JSON.stringify({ image_path: imagemAnterior }) : null,
+                JSON.stringify({ image_path: imagePath, observacoes, pedido_id: parseInt(pedidoId) })
+            ]);
+        } catch (auditError) {
+            console.log('Aviso: Não foi possível registrar auditoria:', auditError.message);
+        }
+
+        // AUDITORIA - ATUALIZAR STATUS DO PEDIDO PARA EMPACOTADO
+        try {
+            await query(`
+                INSERT INTO auditoria_sistema 
+                (usuario_id, usuario_nome, acao, descricao, tabela_afetada, registro_id, ip_address, dados_anteriores, dados_novos)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            `, [
+                usuarioId,
+                req.session.nome,
+                'EMPACOTAR_PEDIDO',
+                `Pedido #${pedidoId} marcado como Empacotado`,
+                'pedidos',
+                parseInt(pedidoId),
+                req.ip || req.connection.remoteAddress || '127.0.0.1',
+                dadosAnteriores.length > 0 ? JSON.stringify(dadosAnteriores[0]) : null,
+                JSON.stringify({ status: 'Empacotado', usuario_empacotamento_id: usuarioId })
+            ]);
+        } catch (auditError) {
+            console.log('Aviso: Não foi possível registrar auditoria:', auditError.message);
+        }
         
         console.log('Prova salva com sucesso!');
         res.redirect('/vendas?sucesso=Prova enviada com sucesso!');
@@ -615,9 +581,7 @@ router.get('/galeria/:id', verificarAutenticacao, async (req, res) => {
         const pedido = pedidos[0];
         
         const provas = await query(`
-            SELECT 
-                pe.*,
-                u.nome as usuario_nome
+            SELECT pe.*, u.nome as usuario_nome
             FROM provas_embalagem pe
             LEFT JOIN usuarios u ON pe.usuario_id = u.id
             WHERE pe.pedido_id = ?
@@ -628,8 +592,7 @@ router.get('/galeria/:id', verificarAutenticacao, async (req, res) => {
             nome: req.session.nome || req.session.usuario || 'Usuário',
             tipo_acesso: req.session.tipo_acesso || 'operador',
             currentPage: 'vendas',
-            pedido: pedido,
-            provas: provas
+            pedido, provas
         });
         
     } catch (error) {
