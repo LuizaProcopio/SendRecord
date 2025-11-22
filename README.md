@@ -80,12 +80,13 @@ DB_NAME=banco_pi
 ```
 
 ### 5. Crie o banco de dados
+
+```bash
+create database banco_pi
+```
 Faça o Dowload do
 ```bash
 banco_pi.sql
-```
-```bash
-create database banco_pi
 ```
 
 Execute o arquivo SQL fornecido no MySQL:
