@@ -106,7 +106,7 @@ O instalador será gerado na pasta `dist/`. Basta executar o arquivo `SendRecord
 
 A aplicação Electron será iniciada automaticamente e o servidor estará rodando em `http://localhost:4040`
 
-## 🔐 Usuários de Acesso (Para Testes)
+## 🔐 Usuários de Acesso 
 
 | Nível | Nome | Senha |
 |-------|------|-------|
