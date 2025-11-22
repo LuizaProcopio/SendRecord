@@ -77,7 +77,6 @@ DB_HOST=localhost
 DB_USER=root
 DB_PASSWORD=sua_senha
 DB_NAME=banco_pi
-DB_PORT=3306
 ```
 
 ### 5. Crie o banco de dados
