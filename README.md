@@ -102,9 +102,9 @@ npm start
 npm run dist
 ```
 
-O instalador será gerado na pasta `dist/`. Basta executar o arquivo `SendRecord Setup X.X.X.exe` para instalar o aplicativo.
+O instalador será gerado na pasta `dist/`. Basta executar o arquivo `SendRecordSetup.exe` para instalar o aplicativo.
 
-A aplicação Electron será iniciada automaticamente e o servidor estará rodando em `http://localhost:4040`
+A aplicação Electron será iniciada automaticamente e o servidor estará rodando.
 
 ## 🔐 Usuários de Acesso 
 
