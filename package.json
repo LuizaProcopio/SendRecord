@@ -39,14 +39,14 @@
     "url": "https://github.com/LuizaProcopio/SendRecord/issues"
   },
   "homepage": "https://github.com/LuizaProcopio/SendRecord#readme",
-"build": {
+  "build": {
     "appId": "com.sendrecord.app",
     "productName": "SendRecord",
     "extraResources": [
-        ".env"
+      ".env"
     ],
     "directories": {
-        "output": "dist"
+      "output": "dist"
     },
     "win": {
       "target": "nsis",

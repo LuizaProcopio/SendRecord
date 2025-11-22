@@ -194,9 +194,25 @@ router.post('/criar', verificarPermissaoAdmin, async (req, res) => {
         // Log da ação (se a tabela auditoria_sistema existir e tivermos o ID)
         if (usuarioLogadoId) {
             try {
+                // Buscar o ID do usuário recém criado
+                const novoUsuario = await query('SELECT id FROM usuarios WHERE email = ?', [email])
+                const novoUsuarioId = novoUsuario.length > 0 ? novoUsuario[0].id : null
+
                 await query(
-                    'INSERT INTO auditoria_sistema (usuario_id, acao, descricao) VALUES (?, ?, ?)',
-                    [usuarioLogadoId, 'CRIAR_USUARIO', `Usuário ${nome} criado com tipo ${tipo_acesso}`]
+                    `INSERT INTO auditoria_sistema 
+                    (usuario_id, usuario_nome, acao, descricao, tabela_afetada, registro_id, ip_address, dados_anteriores, dados_novos) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                    [
+                        usuarioLogadoId, 
+                        req.session.nome, 
+                        'CRIAR_USUARIO', 
+                        `Usuário ${nome} criado com tipo ${tipo_acesso}`,
+                        'usuarios',
+                        novoUsuarioId,
+                        req.ip || req.connection.remoteAddress || '127.0.0.1',
+                        null,
+                        JSON.stringify({ nome, email, tipo_acesso, ativo: usuarioAtivo })
+                    ]
                 )
             } catch (auditError) {
                 console.log('Aviso: Não foi possível registrar auditoria:', auditError.message)
@@ -227,6 +243,9 @@ router.post('/editar/:id', verificarPermissaoAdmin, async (req, res) => {
             return res.redirect(`/config/editar/${id}?erro=Email já está sendo usado`)
         }
 
+        // Buscar dados anteriores ANTES de atualizar
+        const dadosAnteriores = await query('SELECT nome, email, tipo_acesso, ativo FROM usuarios WHERE id = ?', [id])
+
         const usuarioAtivo = ativo ? 1 : 0
 
         // Se a senha foi preenchida, criptografar e atualizar
@@ -256,9 +275,24 @@ router.post('/editar/:id', verificarPermissaoAdmin, async (req, res) => {
         // Log da ação (se a tabela auditoria_sistema existir e tivermos o ID)
         if (usuarioLogadoId) {
             try {
+                // Buscar dados anteriores do usuário
+                const dadosAnteriores = await query('SELECT nome, email, tipo_acesso, ativo FROM usuarios WHERE id = ?', [id])
+                
                 await query(
-                    'INSERT INTO auditoria_sistema (usuario_id, acao, descricao) VALUES (?, ?, ?)',
-                    [usuarioLogadoId, 'EDITAR_USUARIO', `Usuário ${nome} (ID: ${id}) atualizado`]
+                    `INSERT INTO auditoria_sistema 
+                    (usuario_id, usuario_nome, acao, descricao, tabela_afetada, registro_id, ip_address, dados_anteriores, dados_novos) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                    [
+                        usuarioLogadoId, 
+                        req.session.nome, 
+                        'EDITAR_USUARIO', 
+                        `Usuário ${nome} (ID: ${id}) atualizado`,
+                        'usuarios',
+                        parseInt(id),
+                        req.ip || req.connection.remoteAddress || '127.0.0.1',
+                        dadosAnteriores.length > 0 ? JSON.stringify(dadosAnteriores[0]) : null,
+                        JSON.stringify({ nome, email, tipo_acesso, ativo: usuarioAtivo })
+                    ]
                 )
             } catch (auditError) {
                 console.log('Aviso: Não foi possível registrar auditoria:', auditError.message)
@@ -302,8 +336,20 @@ router.post('/deletar/:id', async (req, res) => {
         if (usuarioLogadoId) {
             try {
                 await query(
-                    'INSERT INTO auditoria_sistema (usuario_id, acao, descricao) VALUES (?, ?, ?)',
-                    [usuarioLogadoId, 'DELETAR_USUARIO', `Usuário ${usuario[0].nome} (ID: ${id}) deletado`]
+                    `INSERT INTO auditoria_sistema 
+                    (usuario_id, usuario_nome, acao, descricao, tabela_afetada, registro_id, ip_address, dados_anteriores, dados_novos) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                    [
+                        usuarioLogadoId, 
+                        req.session.nome, 
+                        'DELETAR_USUARIO', 
+                        `Usuário ${usuario[0].nome} (ID: ${id}) deletado`,
+                        'usuarios',
+                        parseInt(id),
+                        req.ip || req.connection.remoteAddress || '127.0.0.1',
+                        JSON.stringify({ nome: usuario[0].nome }),
+                        null
+                    ]
                 )
             } catch (auditError) {
                 console.log('Aviso: Não foi possível registrar auditoria:', auditError.message)
