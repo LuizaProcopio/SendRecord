@@ -10,9 +10,21 @@ const fs = require('fs');
 const query = util.promisify(db.query).bind(db);
 const queueService = require('../../queue/services/queueService');
 
+function getUploadDir() {
+    const isPackaged = process.resourcesPath && !process.resourcesPath.includes('node_modules');
+    
+    if (isPackaged) {
+        // Em produção: salva fora do app.asar
+        return path.join(process.resourcesPath, '..', 'provas_embalagem');
+    } else {
+        // Em desenvolvimento: salva na pasta do projeto
+        return path.join(__dirname, '../../provas_embalagem');
+    }
+}
+
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        const uploadDir = path.join(__dirname, '../../provas_embalagem');
+        const uploadDir = getUploadDir();
         
         if (!fs.existsSync(uploadDir)) {
             fs.mkdirSync(uploadDir, { recursive: true });
@@ -27,7 +39,6 @@ const storage = multer.diskStorage({
         cb(null, `pedido_${pedidoId}_${timestamp}${ext}`);
     }
 });
-
 const upload = multer({
     storage: storage,
     limits: { fileSize: 5 * 1024 * 1024 },
@@ -581,7 +592,7 @@ router.post('/upload-imagem/:id', verificarAutenticacao, upload.single('imagem')
         console.error('Erro ao fazer upload:', error);
         
         if (req.file) {
-            const filePath = path.join(__dirname, '../../provas_embalagem', req.file.filename);
+            const filePath = path.join(getUploadDir(), req.file.filename);
             if (fs.existsSync(filePath)) {
                 fs.unlinkSync(filePath);
             }
