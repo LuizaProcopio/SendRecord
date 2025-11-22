@@ -73,10 +73,10 @@ npm install jspdf jspdf-autotable xlsx
 Crie um arquivo `.env` na raiz do projeto:
 ```env
 # Banco de Dados
-DB_HOST=localhost
-DB_USER=root
-DB_PASSWORD=sua_senha
-DB_NAME=banco_pi
+host=localhost
+user=root
+password=sua_senha
+database=banco_pi
 ```
 
 ### 5. Crie o banco de dados
