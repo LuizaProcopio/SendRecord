@@ -88,12 +88,6 @@ Faça o Dowload do
 ```bash
 banco_pi.sql
 ```
-
-Execute o arquivo SQL fornecido no MySQL:
-```bash
-mysql -u root -p < banco_pi.sql
-```
-
 ### Via MySQL Workbench
 ```bash
 Abra o MySQL Workbench
