@@ -101,7 +101,7 @@ Vá em Server → Data Import
 Selecione Import from Self-Contained File
 Escolha o arquivo `banco_pi.sql`
 Em Default Target Schema, selecione `banco_pi` (ou crie um novo clicando em New...)
-Clique em **Start Import
+Clique em Start Import
 ```
 ### 6. Inicie a aplicação no terminal do VSCode
 ```bash
