@@ -79,7 +79,7 @@ password=sua_senha
 database=banco_pi
 ```
 
-### 5. Crie o banco de dados
+### 5. Crie o banco de dados no MySQL workbench
 
 ```bash
 create database banco_pi
