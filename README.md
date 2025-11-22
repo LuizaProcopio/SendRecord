@@ -88,6 +88,8 @@ Faça o Dowload do
 ```bash
 banco_pi.sql
 ```
+Disponibilizado aqui neste repositorio 
+
 ### Via MySQL Workbench
 ```bash
 Abra o MySQL Workbench
