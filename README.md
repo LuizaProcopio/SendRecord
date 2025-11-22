@@ -94,8 +94,13 @@ Execute o arquivo SQL fornecido no MySQL:
 mysql -u root -p < banco_pi.sql
 ```
 
-Ou via MySQL Workbench:
-- server → Run SQL Script → Selecione `banco_pi.sql`
+### Via MySQL Workbench
+Abra o MySQL Workbench
+Vá em **Server** → **Data Import**
+Selecione **Import from Self-Contained File**
+Escolha o arquivo `banco_pi.sql`
+Em **Default Target Schema**, selecione `banco_pi` (ou crie um novo clicando em **New...**)
+Clique em **Start Import**
 
 ### 6. Inicie a aplicação no terminal do VSCode
 ```bash
