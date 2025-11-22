@@ -97,7 +97,7 @@ Ou via MySQL Workbench:
 npm start
 ```
 
-### 7. Criação do Executável
+### 7. Criação do Executável no terminal do VSCode
 ```bash
 npm run dist
 ```
