@@ -80,6 +80,10 @@ DB_NAME=banco_pi
 ```
 
 ### 5. Crie o banco de dados
+Faça o Dowload do
+```bash
+banco_pi.sql
+```
 ```bash
 create database banco_pi
 ```
@@ -90,7 +94,7 @@ mysql -u root -p < banco_pi.sql
 ```
 
 Ou via MySQL Workbench:
-- File → Run SQL Script → Selecione `banco_pi.sql`
+- server → Run SQL Script → Selecione `banco_pi.sql`
 
 ### 6. Inicie a aplicação no terminal do VSCode
 ```bash
