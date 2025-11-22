@@ -65,7 +65,7 @@ SendRecord
 ```bash
 npm install express mysql2 ejs express-session dotenv multer bcrypt cors
 npm install electron --save-dev
-npm install electron-builder --save
+npm install electron-builder --save-dev
 npm install jspdf jspdf-autotable xlsx
 ```
 
