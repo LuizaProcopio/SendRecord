@@ -1,32 +1,34 @@
 {
-  "name": "app_gestaodeusuario",
+  "name": "sendrecord",
   "version": "1.0.0",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "Aplicação desktop feita com **Electron** e **Node.js**, conectada a banco de dados MySQL.  \r Entrega inicial com login, dashboard e navegação básica.",
+  "description": "Aplicação desktop feita com Electron e Node.js, conectada a banco de dados MySQL.",
   "dependencies": {
-    "bcrypt": "^6.0.0",
+    "bcryptjs": "^2.4.3",
     "chart.js": "^4.5.1",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "ejs": "^3.1.10",
-    "electron-builder": "^26.0.12",
     "express": "^5.1.0",
     "express-session": "^1.18.2",
-    "jspdf": "^3.0.3",
+    "jspdf": "^3.0.4",
     "jspdf-autotable": "^5.0.2",
     "multer": "^2.0.2",
     "mysql2": "^3.15.3",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
-    "electron": "^38.6.0"
+    "electron": "^38.7.1",
+    "electron-builder": "^26.0.12"
   },
   "repository": {
     "type": "git",
@@ -36,5 +38,29 @@
   "bugs": {
     "url": "https://github.com/LuizaProcopio/SendRecord/issues"
   },
-  "homepage": "https://github.com/LuizaProcopio/SendRecord#readme"
+  "homepage": "https://github.com/LuizaProcopio/SendRecord#readme",
+"build": {
+    "appId": "com.sendrecord.app",
+    "productName": "SendRecord",
+    "extraResources": [
+        ".env"
+    ],
+    "directories": {
+        "output": "dist"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "build/icon.ico"
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "build/icon.icns"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ]
+    }
+  }
 }

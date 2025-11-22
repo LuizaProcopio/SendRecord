@@ -1,5 +1,5 @@
 // server/security/auth.js
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const conexao = require('../db.js');
 const Logger = require('../config/logger.js');

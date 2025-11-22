@@ -2,9 +2,9 @@ const express = require('express');
 const path = require('path');
 const session = require('express-session');
 const cors = require('cors');
-require('dotenv').config();
+
 const Logger = require('./config/logger');
-const AuthenticationSystem = require('./security/authI');
+const AuthenticationSystem = require('./security/authi');
 const RBACSystem = require('./security/rbac');
 const AuditSystem = require('./security/audit');
 const InputValidator = require('./security/validation');

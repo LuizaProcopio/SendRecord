@@ -63,9 +63,9 @@ SendRecord
 ```
 ### 3. Instale as dependências
 ```bash
-npm install express mysql2 ejs express-session dotenv multer bcryptjs cors
+npm install express mysql2 ejs express-session dotenv multer bcrypt cors
 npm install electron --save-dev
-npm i electron-builder --save-dev
+npm install electron-builder --save
 npm install jspdf jspdf-autotable xlsx
 ```
 
@@ -73,10 +73,11 @@ npm install jspdf jspdf-autotable xlsx
 Crie um arquivo `.env` na raiz do projeto:
 ```env
 # Banco de Dados
-host=localhost
-user=root
-password=sua_senha
-database=banco_pi
+DB_HOST=localhost
+DB_USER=root
+DB_PASSWORD=sua_senha
+DB_NAME=banco_pi
+DB_PORT=3306
 ```
 
 ### 5. Crie o banco de dados
@@ -97,23 +98,7 @@ Ou via MySQL Workbench:
 npm start
 ```
 
-### 7. Criação do Executável no terminal do VSCode
-```bash
-npm run dist
-```
-
-O instalador será gerado na pasta `dist/`. Basta executar o arquivo `SendRecordSetup.exe` para instalar o aplicativo.
-
-A aplicação Electron será iniciada automaticamente e o servidor estará rodando.
-
-## 🔐 Usuários de Acesso 
-
-| Nível | Nome | Senha |
-|-------|------|-------|
-| 👨‍💼 Admin | Ana Costa | `admin123` |
-| 👔 Gerente | Carlos Silva | `gerente123` |
-| 👷 Supervisor | Fernando | `supervisor123` |
-| 🧑‍🔧 Operador | Juliana Alves | `operador123` |
+A aplicação Electron será iniciada automaticamente e o servidor estará rodando em `http://localhost:4040`
 
 ## 🛠️ Ferramentas
 ![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)
@@ -122,7 +107,6 @@ A aplicação Electron será iniciada automaticamente e o servidor estará rodan
 ![Electron](https://img.shields.io/badge/Electron-47848F?style=for-the-badge&logo=electron&logoColor=white)
 ![EJS](https://img.shields.io/badge/EJS-B4CA65?style=for-the-badge&logo=ejs&logoColor=black)
 ![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white)
-![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
 ![bcrypt](https://img.shields.io/badge/bcrypt-338?style=for-the-badge)
 
 ## 👨‍💻 Desenvolvido por

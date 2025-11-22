@@ -2,7 +2,7 @@ const express = require('express')
 const router = express.Router()
 const db = require('../db')
 const util = require('util')
-const bcrypt = require('bcrypt')
+const bcrypt = require('bcryptjs');
 
 // Promisifica o método query do seu db.js
 const query = util.promisify(db.query).bind(db)
