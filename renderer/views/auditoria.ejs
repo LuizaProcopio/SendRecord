@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/style.css"> 
+    <title>Auditoria</title>
+</head>
+<body>
+    
+    <header class="header">
+        <div class="logo">
+            <img src="../img/Marca.png" alt="Logo da Loja" width="300">
+        </div>
+        
+        <%- include('partials/header', { 
+            nome: nome, 
+            tipo_acesso: tipo_acesso,
+            currentPage: currentPage
+        }) %>
+    </header>
+    
+    <div class="container">
+        <% if (typeof erro !== 'undefined' && erro) { %>
+        <div class="error-message">
+            <%= erro %>
+        </div>
+        <% } %>
+
+        <div class="table-container">
+            <table class="auditoria-table">
+                <thead>
+                    <tr>
+                        <th>Data e Hora</th>
+                        <th>Usuario</th>
+                        <th>Tipo Acesso</th>
+                        <th>Ação</th>
+                        <th>Descrição</th>
+                        <th>Tabela</th>
+                        <th>Registro ID</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if (auditorias.length === 0) { %>
+                        <tr>
+                            <td colspan="8" class="empty-state">
+                                Nenhum registro de auditoria encontrado
+                            </td>
+                        </tr>
+                    <% } else { %>
+                        <% auditorias.forEach(function(item) { %>
+                        <tr class="auditoria-row">
+                            <td class="auditoria-date">
+                                <%= item.data_formatada %>
+                            </td>
+                            <td class="auditoria-user">
+                                <%= item.usuario_nome %>
+                            </td>
+                            <td>
+                                <span class="role-badge role-<%= item.tipo_acesso || 'system' %>">
+                                    <%= item.tipo_acesso ? item.tipo_acesso.charAt(0).toUpperCase() + item.tipo_acesso.slice(1) : 'Sistema' %>
+                                </span>
+                            </td>
+                            <td>
+                                <span class="action-badge action-<%= item.acao.toLowerCase() %>">
+                                    <%= item.acao %>
+                                </span>
+                            </td>
+                            <td class="auditoria-description">
+                                <%= item.descricao %>
+                            </td>
+                            <td class="auditoria-table">
+                                <%= item.tabela_afetada || '-' %>
+                            </td>
+                            <td class="auditoria-registro">
+                                <%= item.registro_id || '-' %>
+                            </td>
+                        </tr>
+                        <% }); %>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</body>
+</html>

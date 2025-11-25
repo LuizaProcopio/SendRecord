@@ -151,7 +151,6 @@ router.post('/novo', verificarAutenticacao, async (req, res) => {
             cep, logradouro, numero, complemento, bairro, cidade, estado, observacoes
         } = req.body;
 
-        console.log('Criando novo pedido:', { order_id, customer_name, source });
 
         const usuarioId = await obterUsuarioLogadoId(req.session);
 
@@ -254,7 +253,6 @@ router.post('/novo', verificarAutenticacao, async (req, res) => {
                 JSON.stringify({ order_id: order_id.toUpperCase(), customer_name, source: sourceFormatado, cliente_id: clienteId })
             ]);
         } catch (auditError) {
-            console.log('Aviso: Não foi possível registrar auditoria:', auditError.message);
         }
 
         queueService.addTask({
@@ -388,7 +386,6 @@ router.post('/detalhes/:id/status', verificarAutenticacao, async (req, res) => {
                 JSON.stringify({ status: novoStatus, observacoes: observacoes || null })
             ]);
         } catch (auditError) {
-            console.log('Aviso: Não foi possível registrar auditoria:', auditError.message);
         }
 
         res.json({ sucesso: true, mensagem: 'Status atualizado com sucesso' });
@@ -444,7 +441,6 @@ router.post('/detalhes/:id/escanear', verificarAutenticacao, async (req, res) =>
                     JSON.stringify({ quantity_scanned: novaQuantidade, verified: verificado, barcode })
                 ]);
             } catch (auditError) {
-                console.log('Aviso: Não foi possível registrar auditoria:', auditError.message);
             }
 
             res.json({ sucesso: true, mensagem: `Item escaneado (${novaQuantidade}/${item.quantity_required})`, verificado });
@@ -527,7 +523,6 @@ router.post('/upload-imagem/:id', verificarAutenticacao, upload.single('imagem')
                 JSON.stringify({ image_path: imagePath, observacoes, pedido_id: parseInt(pedidoId) })
             ]);
         } catch (auditError) {
-            console.log('Aviso: Não foi possível registrar auditoria:', auditError.message);
         }
 
         // AUDITORIA - ATUALIZAR STATUS DO PEDIDO PARA EMPACOTADO
@@ -548,10 +543,8 @@ router.post('/upload-imagem/:id', verificarAutenticacao, upload.single('imagem')
                 JSON.stringify({ status: 'Empacotado', usuario_empacotamento_id: usuarioId })
             ]);
         } catch (auditError) {
-            console.log('Aviso: Não foi possível registrar auditoria:', auditError.message);
         }
         
-        console.log('Prova salva com sucesso!');
         res.redirect('/vendas?sucesso=Prova enviada com sucesso!');
         
     } catch (error) {

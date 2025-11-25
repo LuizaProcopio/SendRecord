@@ -125,10 +125,11 @@ body {
     background: #fff;
     display: flex;
     align-items: center;
-    position: relative;
     border-radius: 3px;
     box-shadow: 0 2px 6px rgba(0,0,0,0.25);
     border: 1px solid rgba(0,0,0,0.06);
+    padding: 0 14px;
+    justify-content: space-between; /* Distribui igualmente */
 }
 
 .navigation .nav-item {
@@ -142,26 +143,6 @@ body {
     cursor: pointer;
     border-radius: 6px;
     transition: all .18s ease;
-}
-
-.navigation .nav-item:first-child {
-    margin-left: 14px;
-}
-
-.navigation .nav-item:nth-child(2) {
-    position: absolute;
-    left: 33.3%;
-    transform: translateX(-50%);
-}
-.navigation .nav-item:nth-child(3) {
-    position: absolute;
-    left: 66.6%;
-    transform: translateX(-50%);
-}
-
-.navigation .nav-item:last-child {
-    margin-left: auto;
-    margin-right: 14px;
 }
 
 .navigation .nav-item:hover {
@@ -1575,6 +1556,142 @@ input[type="file"] {
         .relatorios-btn-exportar {
             width: 100%;
             justify-content: center;
+        }
+    }
+        .auditoria-description {
+        color: #555;
+        max-width: 300px;
+    }
+
+    .auditoria-table {
+        color: #666;
+        font-family: monospace;
+        font-size: 12px;
+    }
+
+    .auditoria-registro {
+        color: #666;
+        font-family: monospace;
+    }
+
+    .auditoria-ip {
+        color: #999;
+        font-size: 12px;
+        font-family: monospace;
+    }
+
+    .role-badge {
+        display: inline-block;
+        padding: 5px 12px;
+        border-radius: 15px;
+        font-size: 11px;
+        font-weight: bold;
+        text-transform: uppercase;
+    }
+
+    .role-admin {
+        background-color: #dc3545;
+        color: #fff;
+    }
+
+    .role-gerente {
+        background-color: #007bff;
+        color: #fff;
+    }
+
+    .role-supervisor {
+        background-color: #17a2b8;
+        color: #fff;
+    }
+
+    .role-operador {
+        background-color: #6c757d;
+        color: #fff;
+    }
+
+    .role-system {
+        background-color: #6c757d;
+        color: #fff;
+    }
+
+    .action-badge {
+        display: inline-block;
+        padding: 5px 12px;
+        border-radius: 15px;
+        font-size: 11px;
+        font-weight: bold;
+        text-transform: uppercase;
+    }
+
+    .action-criar_pedido,
+    .action-criar_usuario,
+    .action-insert {
+        background-color: #28a745;
+        color: #fff;
+    }
+
+    .action-editar_usuario,
+    .action-atualizar_status,
+    .action-update {
+        background-color: #ffc107;
+        color: #333;
+    }
+
+    .action-upload_prova {
+        background-color: #17a2b8;
+        color: #fff;
+    }
+
+    .action-escanear_item {
+        background-color: #6f42c1;
+        color: #fff;
+    }
+
+    .action-empacotar_pedido {
+        background-color: #20c997;
+        color: #fff;
+    }
+
+    .action-delete {
+        background-color: #dc3545;
+        color: #fff;
+    }
+
+    .action-login,
+    .action-logout {
+        background-color: #007bff;
+        color: #fff;
+    }
+
+    /* Responsividade para Auditoria */
+    @media (max-width: 768px) {
+        .auditoria-stats {
+            flex-direction: column;
+        }
+
+        .stat-card {
+            width: 100%;
+        }
+
+        .filters-section form {
+            flex-direction: column;
+        }
+
+        .filter-select {
+            width: 100%;
+        }
+
+        .auditoria-table {
+            font-size: 11px;
+        }
+
+        .auditoria-table th,
+        .auditoria-table td {
+            padding: 10px 8px;
+        }
+
+        .auditoria-description {
+            max-width: 150px;
         }
     }
     

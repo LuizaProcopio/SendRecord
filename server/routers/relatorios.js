@@ -4,24 +4,16 @@ const db = require('../db');
 
 // Middleware de autenticação
 function verificarAutenticacao(req, res, next) {
-    console.log('Verificando autenticação...');
-    console.log('Sessão:', req.session);
     
     if (req.session && req.session.usuario) {
-        console.log('Usuário autenticado!');
         next();
     } else {
-        console.log('Usuário NÃO autenticado! Redirecionando...');
         res.redirect('/login');
     }
 }
 
 // Rota para renderizar a página de relatórios
 router.get('/', verificarAutenticacao, (req, res) => {
-    console.log('ENTROU NA ROTA /relatorios');
-    console.log('Usuário:', req.session.usuario);
-    console.log('Nome:', req.session.usuario?.nome);
-    console.log('Tipo Acesso:', req.session.usuario?.tipo_acesso);
     
     try {
         const dados = {
@@ -31,11 +23,9 @@ router.get('/', verificarAutenticacao, (req, res) => {
             title: 'Relatórios e Gráficos'
         };
         
-        console.log('Dados para renderizar:', dados);
         
         res.render('relatorios', dados);
         
-        console.log('Página renderizada com sucesso!');
     } catch (error) {
         console.error('ERRO AO RENDERIZAR:', error);
         console.error('Stack:', error.stack);
@@ -43,7 +33,6 @@ router.get('/', verificarAutenticacao, (req, res) => {
     }
 });
 
-// Rota para buscar dados dos PEDIDOS
 // Rota para buscar dados dos PEDIDOS
 router.get('/dados', verificarAutenticacao, (req, res) => {
     try {

@@ -166,7 +166,7 @@ class Logger {
 
   static debug(message, data) {
     if (process.env.NODE_ENV === 'development' || process.env.DEBUG) {
-      console.log('🔍 DEBUG:', message);
+      console.log('DEBUG:', message);
       if (data) {
         console.log(data);
       }

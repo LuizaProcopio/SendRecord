@@ -16,6 +16,7 @@ const homeRouter = require('./routers/home');
 const vendasRouter = require('./routers/vendas');
 const relatoriosRouter = require('./routers/relatorios');
 const configRouter = require('./routers/config');
+const auditoria = require('./routers/auditoria');
 
 const app = express();
 const PORT = 4040;
@@ -28,6 +29,7 @@ app.use(cors({ origin: process.env.FRONTEND_URL || 'http://localhost:5173', cred
 app.use(express.json());
 app.use(session({ secret: 'segredo-super-seguro', resave: false, saveUninitialized: false }));
 app.use('/provas_embalagem', express.static(path.join(__dirname, '../provas_embalagem')));
+app.use('/auditoria', auditoria);
 
 app.use((req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
